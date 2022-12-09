@@ -121,7 +121,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             reads_final << read_seq << "\n";
             read_num++;
         }
-        else if (read_length <= uniform_read_length)
+        else if (read_length <= param.read_length_threshold )
         {
             reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
             reads_final << read_seq << "\n";

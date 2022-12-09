@@ -7,12 +7,13 @@
 void printHelp(const algoParams &params)
 {
     std::cout << "Usage: chopper [options] <input-reads.fa> <in.paf>\n";
-    std::cout << "  -t NUM     thread count, default " << params.threads << "\n";
     std::cout << "  -r NUM     resolution of masks, repeat annotation, coverage " << params.reso << "\n";
     std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
     std::cout << "  -m NUM     minimum coverage " << params.min_cov << "\n";
     std::cout << "  -f NUM     coverage fraction" << params.cov_frac << "\n";
     std::cout << "  -g NUM     repeat_annotation_gap_thres " << params.repeat_annotation_gap_thres << "\n";
+    std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
+    std::cout << "  -t NUM     read_length_threshold " << params.read_length_threshold << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     std::cout << "  -L FILE    dump algorithm log\n";
     exit(1);
@@ -25,13 +26,10 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "t:r:e:m:f:g:l:o:L:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:f:g:l:t:o:L:")) != -1)
     {
         switch (option)
         {
-        case 't':
-            params.threads = atoi(optarg);
-            break;
         case 'r':
             params.reso = atoi(optarg);
             break;
@@ -49,6 +47,9 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             params.repeat_length = atoi(optarg);
+            break;
+        case 't':
+            params.read_length_threshold = atoi(optarg);
             break;
         case 'o':
             params.outputfilename = optarg;
