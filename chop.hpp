@@ -121,7 +121,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             reads_final << read_seq << "\n";
             read_num++;
         }
-        else if (read_length <= 20000)
+        else if (read_length <= uniform_read_length)
         {
             reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
             reads_final << read_seq << "\n";
@@ -143,7 +143,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
             int last_length = read_length - (parts - 1) * overlap_length;
 
-            reads_final << "read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + j * overlap_length + last_length
+            reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + j * overlap_length + last_length
                         << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
             reads_final << read_seq.substr(0 + j * overlap_length, uniform_read_length) << "\n";
