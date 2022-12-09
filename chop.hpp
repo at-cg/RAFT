@@ -134,7 +134,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
             for (j=0; j < parts-1; j++){
 
-                reads_final << "read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + uniform_read_length + j * overlap_length
+                reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + uniform_read_length + j * overlap_length
                             << ",length=" << 10000 << read_name.substr(read_name.find_last_of(',')) << "\n";
 
                 reads_final << read_seq.substr(0 + j * overlap_length, uniform_read_length) << "\n";
