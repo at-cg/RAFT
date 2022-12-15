@@ -3,8 +3,7 @@
 
 struct algoParams
 {
-    int threads;
-    int cut_off;
+    int algo;
     int reso;
     int est_cov;
     int min_cov;
@@ -17,8 +16,8 @@ struct algoParams
 
     void initParams()
     {
-        threads = 1;
-        reso = 40;
+        algo = 1;
+        reso = 50;
         est_cov = 0;
         min_cov = 0;
         cov_frac = 3;
@@ -30,7 +29,7 @@ struct algoParams
 
     void printParams()
     {
-        std::cout << "INFO, printParams(), threads = " << threads << "\n";
+        std::cout << "INFO, printParams(), algorithm = " << algo << "\n";
         std::cout << "INFO, printParams(), reso = " << reso << "\n";
         std::cout << "INFO, printParams(), est_cov = " << est_cov << "\n";
         std::cout << "INFO, printParams(), min_cov = " << min_cov << "\n";

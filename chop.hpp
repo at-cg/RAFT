@@ -1,4 +1,5 @@
 #include "repeat.hpp"
+#include <unistd.h>
 
 int get_id_from_string(const char *name_str)
 {
@@ -45,23 +46,35 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
     paf_rec_t r;
     fp = paf_open(fn);
     int num = 0;
+    int count_of_non_overlaps = 0;
     while (paf_read(fp, &r) >= 0)
     {
-        num++;
-        Overlap *new_ovl = new Overlap();
+        // if (r.qe - r.qs == r.ql || r.te - r.ts == r.tl ||
+        //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||     
+        //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
+        //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
+        //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
+        // {
+            num++;
+            Overlap *new_ovl = new Overlap();
 
-        new_ovl->read_A_match_start_ = r.qs;
-        new_ovl->read_B_match_start_ = r.ts;
-        new_ovl->read_A_match_end_ = r.qe;
-        new_ovl->read_B_match_end_ = r.te;
-        new_ovl->alen = r.ql;
-        new_ovl->blen = r.tl;
-        new_ovl->reverse_complement_match_ = r.rev;
-        new_ovl->diffs = 0;
-        new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
-        new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
-        alns.push_back(new_ovl);
+            new_ovl->read_A_match_start_ = r.qs;
+            new_ovl->read_B_match_start_ = r.ts;
+            new_ovl->read_A_match_end_ = r.qe;
+            new_ovl->read_B_match_end_ = r.te;
+            new_ovl->alen = r.ql;
+            new_ovl->blen = r.tl;
+            new_ovl->reverse_complement_match_ = r.rev;
+            new_ovl->diffs = 0;
+            new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
+            new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
+            alns.push_back(new_ovl);
+        // } else{
+        //     count_of_non_overlaps++;
+        // }
     }
+
+    //fprintf(stdout, "INFO, count_of_non_overlaps %d\n", count_of_non_overlaps);
     return num;
 }
 
@@ -100,8 +113,12 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
     n_read = loadFASTA(readfilename, reads);
     n_aln = loadPAF(paffilename, aln);
-    
-    repeat_annotate(reads, aln, param);
+
+    if (param.algo)
+        repeat_annotate2(reads, aln, param);
+    else
+        repeat_annotate(reads, aln, param);
+
     int read_num = 1;
 
     int overlap_length = param.repeat_length;
