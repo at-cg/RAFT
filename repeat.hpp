@@ -82,7 +82,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream cov_grad(param.outputfilename + ".cov_grad.txt");
-    std::ofstream mask(param.outputfilename + ".mask");
+    std::ofstream mask(param.outputfilename + ".mask.txt");
     std::ofstream repeat_anno(param.outputfilename + ".repeat_anno.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
 
@@ -193,10 +193,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     int cov_est = read_coverage[median_id];
 
-    int mean_cov_est = total_cov / total_slot; 
-
-    if (param.est_cov != 0)
-        cov_est = param.est_cov;
+    int mean_cov_est = total_cov / total_slot;
 
     fprintf(stdout, "INFO, Estimated mean coverage:  %d\n", mean_cov_est);
     fprintf(stdout, "INFO, Estimated median coverage:  %d\n", cov_est);
@@ -204,9 +201,6 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int min_cov = cov_est / param.cov_frac;
 
     fprintf(stdout, "INFO, Estimated min coverage:  %d\n", min_cov);
-
-    if (param.min_cov > min_cov)
-        min_cov = param.min_cov;
 
     fprintf(stdout, "INFO, mask vector\n");
 
@@ -311,7 +305,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         {
             count_repeat_annos++;
             repeat_anno << r.first << ",";
-            repeat_anno << r.second << " "; 
+            repeat_anno << r.second << " ";
         }
         repeat_anno << std::endl;
         if (repeat_annotation[i].size() > 0)
@@ -451,7 +445,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
                 int num_reads_extending_to_end = 0;
                 int num_reads_with_internal_overlaps = 0;
                 int repeat_length = 0;
- 
+
                 for (int id = 0; id < read_other_ends.size(); ++id)
                 {
                     if (maskvec[i].second - read_other_ends[id] < param.repeat_annotation_gap_thres)
@@ -580,7 +574,7 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
     std::unordered_map<int, std::vector<std::pair<int, int>>> self_aln_list;
     std::vector<std::tuple<int, int, int>> repeats;
-    
+
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream repeat_reg(param.outputfilename + ".repeats.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
@@ -637,13 +631,13 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
     fprintf(stdout, "INFO, profile coverage done\n");
 
     int cov_est = param.est_cov;
-    int high_cov = cov_est * 1.5;
+    int high_cov = cov_est * param.cov_mul;
     int count_long_repeat_reads = 0;
 
     for (int i = r_begin; i <= r_end; i++)
     {
         repeat_reg << "read " << i << ", ";
-        
+
         // get the longest consecutive region that has high coverage, high coverage = estimated coverage * 1.5
         int start = 0;
         int end = start;
@@ -676,6 +670,7 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
         {
             repeats[i] = std::tuple<int, int, int>(maxstart, maxend, maxlen);
             reads[i]->preserve = 1;
+            repeat_reg << "read " << i << ", ";
             long_repeats << maxstart << "," << maxend << "," << maxlen << std::endl;
             count_long_repeat_reads++;
         }
@@ -683,4 +678,3 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
     fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
 }
-

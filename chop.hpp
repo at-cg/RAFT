@@ -50,7 +50,7 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
     while (paf_read(fp, &r) >= 0)
     {
         // if (r.qe - r.qs == r.ql || r.te - r.ts == r.tl ||
-        //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||     
+        //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||
         //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
         //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
         //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
@@ -121,7 +121,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
     int read_num = 1;
 
-    int overlap_length = param.repeat_length;
+    int overlap_length = param.overlap_length;
     int uniform_read_length = overlap_length * 2;
 
     for (int i = 0; i < n_read; i++){
@@ -145,7 +145,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             read_num++;
         }
         else
-        {   
+        {
             int parts = read_length / overlap_length;
             int j;
 
@@ -158,13 +158,15 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 read_num++;
             }
 
-            int last_length = read_length - (parts - 1) * overlap_length;
+            int last_length = read_length - ((parts - 1) * overlap_length);
 
-            reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + j * overlap_length + last_length
-                        << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
+            if(last_length!=0){
+              reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * overlap_length << "-" << start_pos + j * overlap_length + last_length
+                          << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
-            reads_final << read_seq.substr(0 + j * overlap_length, uniform_read_length) << "\n";
-            read_num++;
+              reads_final << read_seq.substr(0 + j * overlap_length, uniform_read_length) << "\n";
+              read_num++;
+          }
 
         }
     }

@@ -4,7 +4,7 @@ OVERLAPS=$HOME/Desktop/GitHub/chopper/overlaps.paf
 
 OUTPUTSEQ=output_reads.fasta
 
-$EXE -e 20 $READS $OVERLAPS 
+$EXE -e 20 -l 5000 $READS $OVERLAPS 
 
 # $EXE -a 0 $READS $OVERLAPS 
 
