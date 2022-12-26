@@ -15,6 +15,7 @@ void printHelp(const algoParams &params)
     std::cout << "  -g NUM     repeat_annotation_gap_thres " << params.repeat_annotation_gap_thres << "\n";
     std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
     std::cout << "  -v NUM     overlap_length " << params.overlap_length << "\n";
+    std::cout << "  -v NUM     uniform_read_length " << params.uniform_read_length << "\n";
     std::cout << "  -t NUM     read_length_threshold " << params.read_length_threshold << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     exit(1);
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "a:r:f:e:m:g:l:v:t:o:")) != -1)
+    while ((option = getopt(argc, argv, "a:r:f:e:m:g:l:v:u:t:o:")) != -1)
     {
         switch (option)
         {
@@ -53,6 +54,9 @@ int main(int argc, char *argv[])
             params.repeat_length = atoi(optarg);
             break;
         case 'v':
+            params.overlap_length = atoi(optarg);
+            break;
+        case 'u':
             params.overlap_length = atoi(optarg);
             break;
         case 't':

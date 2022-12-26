@@ -1,10 +1,12 @@
 EXE=$HOME/Desktop/GitHub/chopper/chopper
 READS=$HOME/Desktop/GitHub/chopper/reads.fasta
 OVERLAPS=$HOME/Desktop/GitHub/chopper/overlaps.paf
-
 OUTPUTSEQ=output_reads.fasta
+PREFIX=output
 
-$EXE -e 20 -l 5000 $READS $OVERLAPS 
+rm ${PREFIX}*
+
+$EXE -e 20 -o ${PREFIX} $READS $OVERLAPS 
 
 # $EXE -a 0 $READS $OVERLAPS 
 
