@@ -3,7 +3,6 @@
 
 struct algoParams
 {
-    int algo;
     int reso;
     int cov_frac;
     int repeat_annotation_gap_thres;
@@ -17,7 +16,6 @@ struct algoParams
 
     void initParams()
     {
-        algo = 1;
         reso = 50;
         cov_frac = 3;
         repeat_annotation_gap_thres = 200;
@@ -32,7 +30,6 @@ struct algoParams
 
     void printParams()
     {
-        std::cout << "INFO, printParams(), algorithm = " << algo << "\n";
         std::cout << "INFO, printParams(), reso = " << reso << "\n";
         std::cout << "INFO, printParams(), cov_frac = " << cov_frac << "\n";
         std::cout << "INFO, printParams(), repeat_annotation_gap_thres = " << repeat_annotation_gap_thres << "\n";

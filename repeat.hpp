@@ -43,7 +43,7 @@ bool pairDescend(int &firstElem, int &secondElem)
 }
 #endif
 
-void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso)
+/* void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso)
 {
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
     std::vector<std::pair<int, int>> events;
@@ -524,8 +524,9 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
     fprintf(stdout, "INFO, Number of long repeats:  %d\n", count_long_repeats);
 }
+ */
 
-void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
+void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
 
     int intervals = read->len / reso ;
@@ -567,7 +568,7 @@ void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<
     return;
 }
 
-void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param){
+void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param){
 
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
@@ -618,7 +619,7 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
         std::vector<std::pair<int, int>> coverage;
 
         // profileCoverage: get the coverage based on pile-o-gram
-        profileCoverage2(idx_pileup[i], coverage, param.reso, reads[i]);
+        profileCoverage(idx_pileup[i], coverage, param.reso, reads[i]);
 
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)

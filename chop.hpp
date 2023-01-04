@@ -114,10 +114,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
     n_read = loadFASTA(readfilename, reads);
     n_aln = loadPAF(paffilename, aln);
 
-    if (param.algo)
-        repeat_annotate2(reads, aln, param);
-    else
-        repeat_annotate(reads, aln, param);
+    repeat_annotate(reads, aln, param);
 
     int read_num = 1;
 

@@ -7,8 +7,7 @@
 void printHelp(const algoParams &params)
 {
     std::cout << "Usage: chopper [options] <input-reads.fa> <in.paf>\n";
-    std::cout << "  -a NUM     algorithm 0 or 1 " << params.algo << "\n";
-    std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
+     std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
     std::cout << "  -f NUM     coverage fraction" << params.cov_frac << "\n";
     std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
     std::cout << "  -m NUM     coverage multiplier" << params.cov_mul << "\n";
@@ -28,13 +27,10 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "a:r:f:e:m:g:l:v:u:t:o:")) != -1)
+    while ((option = getopt(argc, argv, "r:f:e:m:g:l:v:u:t:o:")) != -1)
     {
         switch (option)
         {
-        case 'a':
-            params.algo = atoi(optarg);
-            break;
         case 'r':
             params.reso = atoi(optarg);
             break;
