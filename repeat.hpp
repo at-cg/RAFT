@@ -579,6 +579,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream repeat_reg(param.outputfilename + ".repeats.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
 
     int r_begin = aln.front()->read_A_id_;
     int r_end = aln.back()->read_A_id_;
@@ -614,7 +615,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     fprintf(stdout, "INFO, profile coverage\n");
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         std::vector<std::pair<int, int>> coverage;
 
@@ -635,7 +636,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int high_cov = cov_est * param.cov_mul;
     int count_long_repeat_reads = 0;
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         repeat_reg << "read " << i << ", ";
 
@@ -647,7 +648,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         {
             if (coverages[i][j].second > high_cov)
             {
-                end = coverages[i][j].first + param.reso;
+                end = coverages[i][j].first + param.reso - 1;
             }
             else
             {
@@ -671,9 +672,14 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         {
             repeats[i] = std::tuple<int, int, int>(maxstart, maxend, maxlen);
             reads[i]->preserve = 1;
-            repeat_reg << "read " << i << ", ";
+            long_repeats << "read " << i << ", ";
             long_repeats << maxstart << "," << maxend << "," << maxlen << std::endl;
             count_long_repeat_reads++;
+            if (reads[i]->align.compare("forward") == 0){
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + maxstart << "\t" << reads[i]->start_pos + maxend << std::endl;
+            } else if (reads[i]->align.compare("reverse") == 0){
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - maxend << "\t" << reads[i]->end_pos - maxstart << std::endl;
+            }
         }
     }
 

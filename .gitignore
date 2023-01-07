@@ -1,4 +1,5 @@
 *.paf
 *.txt
 *.fasta*
+*.bed
 chopper*

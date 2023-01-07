@@ -3,20 +3,17 @@
 
 int get_id_from_string(const char *name_str)
 {
-
-    const char *sub0 = strchr(name_str, '=');
-    const char *sub1 = sub0 + 1;
-    const char *sub2 = strchr(sub1, ',');
+    const char *sub0 = strchr(name_str, '=') + 1;
+    const char *sub1 = strchr(sub0, ',');
 
     char substr[15];
-    strncpy(substr, sub1, strlen(sub1) - strlen(sub2));
-    substr[strlen(sub1) - strlen(sub2)] = 0;
+    strncpy(substr, sub0, strlen(sub0) - strlen(sub1));
+    substr[strlen(sub0) - strlen(sub1)] = 0;
     return atoi(substr);
 }
 
 int get_start_pos_from_string(const char *name_str)
 {
-
     const char *sub0 = strchr(name_str, ',');
     const char *sub1 = strchr(sub0, '=') + 1;
     const char *sub2 = strchr(sub1, '-');
@@ -27,16 +24,38 @@ int get_start_pos_from_string(const char *name_str)
     return atoi(substr);
 }
 
+int get_end_pos_from_string(const char *name_str)
+{
+
+    const char *sub0 = strchr(name_str, '-') + 1;
+    const char *sub1 = strchr(sub0, ',');
+
+    char substr[15];
+    strncpy(substr, sub0, strlen(sub0) - strlen(sub1));
+    substr[strlen(sub0) - strlen(sub1)] = 0;
+    return atoi(substr);
+}
+
 std::string get_alignment_from_string(const char *name_str)
 {
 
-    const char *sub0 = strchr(name_str, ',');
-    const char *sub1 = sub0 + 1;
-    const char *sub2 = strchr(sub1, ',');
+    const char *sub0 = strchr(name_str, ',') + 1;
+    const char *sub1 = strchr(sub0, ',');
 
     char substr[15];
-    strncpy(substr, sub1, strlen(sub1) - strlen(sub2));
-    substr[strlen(sub1) - strlen(sub2)] = 0;
+    strncpy(substr, sub0, strlen(sub0) - strlen(sub1));
+    substr[strlen(sub0) - strlen(sub1)] = 0;
+    return std::string(substr);
+}
+
+std::string get_chr_from_string(const char *name_str)
+{
+
+    const char *sub0 = strrchr(name_str, ',') + 1;
+
+    char substr[15];
+    strncpy(substr, sub0, strlen(sub0));
+    substr[strlen(sub0)] = 0;
     return std::string(substr);
 }
 
@@ -74,7 +93,7 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
         // }
     }
 
-    //fprintf(stdout, "INFO, count_of_non_overlaps %d\n", count_of_non_overlaps);
+
     return num;
 }
 
@@ -89,14 +108,17 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
     fp = gzopen(fn, "r");
     seq = kseq_init(fp);
 
+
     while ((l = kseq_read(seq)) >= 0)
     {
-        Read *new_r = new Read(num, strlen(seq->seq.s), std::string(seq->name.s), std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_alignment_from_string(seq->name.s));
-        reads.push_back(new_r);
-        num++;
+            Read *new_r = new Read(num, strlen(seq->seq.s), std::string(seq->name.s), std::string(seq->seq.s), 
+            get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s), 
+            get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
+            reads.push_back(new_r);
+            num++;
     }
 
-    kseq_destroy(seq);
+        kseq_destroy(seq);
     gzclose(fp);
 
     return num;
@@ -104,7 +126,9 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
 
 void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
 {
+
     std::ofstream reads_final("output_reads.fasta");
+    std::ofstream bed_fragmented("fragmentation.bed");
 
     int n_read;
     int64_t n_aln = 0;
@@ -128,6 +152,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
         std::string read_seq = reads[i]->bases;
         int read_length = reads[i]->len;
         int start_pos = reads[i]->start_pos;
+        int end_pos = reads[i]->end_pos;
         std::string align = reads[i]->align;
 
         if (reads[i]->preserve)
@@ -147,26 +172,55 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             int parts = read_length / distance;
             int j;
 
-            for (j=0; j < parts-1; j++){
+            if (align.compare("forward")==0)
+            {
 
-                reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * distance << "-"
-                            << start_pos + j * distance + uniform_read_length
+                for (j = 0; j < parts - 1; j++)
+                {
+
+                    reads_final << ">read=" << read_num << "," << align << ",position=" 
+                                << start_pos + j * distance << "-" << start_pos + j * distance + uniform_read_length
+                                << ",length=" << uniform_read_length << read_name.substr(read_name.find_last_of(',')) << "\n";
+
+                    reads_final << read_seq.substr(0 + j * distance, uniform_read_length) << "\n";
+                    read_num++;
+                }
+
+                int last_length = read_length - ((parts - 1) * distance);
+
+                reads_final << ">read=" << read_num << "," << align << ",position=" 
+                            << start_pos + j * distance << "-" << start_pos + j * distance + last_length
+                            << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
+
+                reads_final << read_seq.substr(0 + j * distance, uniform_read_length) << "\n";
+                read_num++;
+                
+            }
+            else if (align.compare("reverse")==0)
+            {
+                for (j = 0; j < parts - 1; j++)
+                {
+
+                reads_final << ">read=" << read_num << "," << align << ",position=" 
+                            << end_pos - j * distance - uniform_read_length << "-" << end_pos - j * distance
                             << ",length=" << uniform_read_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
                 reads_final << read_seq.substr(0 + j * distance, uniform_read_length) << "\n";
                 read_num++;
+                }
+
+                int last_length = read_length - ((parts - 1) * distance);
+
+                reads_final << ">read=" << read_num << "," << align << ",position="
+                            << end_pos - j * distance - last_length << "-" << end_pos - j * distance
+                            << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
+
+                reads_final << read_seq.substr(0 + j * distance, uniform_read_length) << "\n";
+                read_num++;
+                
             }
 
-            int last_length = read_length - ((parts - 1) * distance);
-
-            if(last_length!=0){
-              reads_final << ">read=" << read_num << "," << align << ",position=" << start_pos + j * distance << "-" 
-                << start_pos + j * distance + last_length
-                << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
-
-              reads_final << read_seq.substr(0 + j * overlap_length, uniform_read_length) << "\n";
-              read_num++;
-          }
+            bed_fragmented << reads[i]->chr <<"\t" << start_pos << "\t" << end_pos << std::endl;
         }
     }
 }

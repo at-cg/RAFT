@@ -7,12 +7,6 @@
 
 typedef std::pair<int, int> Interval;
 
-enum AlignType
-{
-    REVERSE,
-    FORWARD
-};
-
 class Read
 { // read class
 public:
@@ -22,11 +16,12 @@ public:
     std::string bases; // read bases
     int len;
     int start_pos;
+    int end_pos;
     std::string align;
+    std::string chr;
     int preserve = 0;
 
-    Read(int id, int length, std::string name, std::string bases, int start_pos, std::string align) : id(id), bases(bases), name(name), len(length), start_pos(start_pos), align(align){};
-    Read(int id, int length, std::string name, std::string bases) : id(id), bases(bases), name(name), len(length){};
+    Read(int id, int length, std::string name, std::string bases, int start_pos, int end_pos, std::string align, std::string chr) : id(id), bases(bases), name(name), len(length), start_pos(start_pos), end_pos(end_pos), align(align), chr(chr){};
     Read(int id, std::string name, std::string bases) : id(id), bases(bases), name(name){};
 
     bool active = true;
