@@ -128,7 +128,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 {
 
     std::ofstream reads_final("output_reads.fasta");
-    std::ofstream bed_fragmented(param.outputfilename + "fragmentation.bed");
+    std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
 
     int n_read;
     int64_t n_aln = 0;
