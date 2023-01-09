@@ -196,7 +196,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 read_num++;
                 
             }
-            else if (aligni.compare("reverse")==0)
+            else if (align.compare("reverse")==0)
             {
                 for (j = 0; j < parts - 1; j++)
                 {
