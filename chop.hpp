@@ -129,6 +129,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
     std::ofstream reads_final("output_reads.fasta");
     std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
+    std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
 
     int n_read;
     int64_t n_aln = 0;
@@ -160,6 +161,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
             reads_final << read_seq << "\n";
             read_num++;
+            bed_preserved << reads[i]->chr << "\t" << start_pos << "\t" << end_pos << std::endl;
         }
         else if (read_length <= param.read_length_threshold )
         {
