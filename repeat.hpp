@@ -545,7 +545,12 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
     std::vector<std::pair<int, int>> events;
     for (int i = 0; i < alignments.size(); i++)
     {
-        events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, alignments[i]->read_A_match_end_));
+        if (alignments[i]->read_A_id_ == read->id){
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, alignments[i]->read_A_match_end_));
+        }
+        if (alignments[i]->read_B_id_ == read->id){
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_, alignments[i]->read_B_match_end_));
+        }
     }
 
     std::sort(events.begin(), events.end(), compare_event);
@@ -573,7 +578,6 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
-    std::unordered_map<int, std::vector<std::pair<int, int>>> self_aln_list;
     std::vector<std::tuple<int, int, int>> repeats;
 
     std::ofstream cov(param.outputfilename + ".coverage.txt");
@@ -595,16 +599,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     {
         if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
         {
-            aln[i]->active = false;
-            if (self_aln_list.find(aln[i]->read_A_id_) == self_aln_list.end())
-                self_aln_list[aln[i]->read_A_id_] = std::vector<std::pair<int, int>>();
-
-            self_aln_list[aln[i]->read_A_id_].push_back(std::pair<int, int>(aln[i]->read_A_match_start_, aln[i]->read_A_match_end_));
-            self_aln_list[aln[i]->read_A_id_].push_back(std::pair<int, int>(aln[i]->read_B_match_start_, aln[i]->read_B_match_end_));
+            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
         }
-        if (aln[i]->active)
+        else
         {
             idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
+            idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
         }
     }
 
