@@ -43,14 +43,22 @@ bool pairDescend(int &firstElem, int &secondElem)
 }
 #endif
 
-/* void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso)
+void profileCoverage1(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
     std::vector<std::pair<int, int>> events;
     for (int i = 0; i < alignments.size(); i++)
     {
-        events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , 1));
-        events.push_back(std::pair<int, int>(alignments[i]->read_A_match_end_ , -1));
+        if (alignments[i]->read_A_id_ == read->id)
+        {
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_end_, -1));
+        }
+        if (alignments[i]->read_B_id_ == read->id)
+        {
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_, 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_end_, -1));
+        }
     }
 
     std::sort(events.begin(), events.end(), compare_event);
@@ -71,7 +79,7 @@ bool pairDescend(int &firstElem, int &secondElem)
     return;
 }
 
-void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param)
+void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param)
 {
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
@@ -80,20 +88,15 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     std::vector<std::vector<std::pair<int, int>>> repeat_annotation;
     std::unordered_map<int, std::vector<std::tuple<int, int, int>>> repeats;
 
-    std::ofstream cov(param.outputfilename + ".coverage.txt");
-    std::ofstream cov_grad(param.outputfilename + ".cov_grad.txt");
-    std::ofstream mask(param.outputfilename + ".mask.txt");
-    std::ofstream repeat_anno(param.outputfilename + ".repeat_anno.txt");
-    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream cov(param.outputfilename + ".coverage1.txt");
+    std::ofstream cov_grad(param.outputfilename + ".cov_grad1.txt");
+    std::ofstream mask(param.outputfilename + ".mask1.txt");
+    std::ofstream repeat_anno(param.outputfilename + ".repeat_anno1.txt");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats1.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats1.bed");
 
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
-    std::unordered_map<int, std::vector<std::pair<int, int>>> self_aln_list;
 
-    int r_begin = aln.front()->read_A_id_;
-    int r_end = aln.back()->read_A_id_;
-
-
-    fprintf(stdout, "INFO, begin %d(), end %d()\n",r_begin, r_end);
     fprintf(stdout, "INFO, length of alignments  %lu()\n", aln.size());
 
     for (int i = 0; i < n_read; i++)
@@ -109,16 +112,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     {
         if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
         {
-            aln[i]->active = false;
-            if (self_aln_list.find(aln[i]->read_A_id_) == self_aln_list.end())
-                self_aln_list[aln[i]->read_A_id_] = std::vector<std::pair<int, int>>();
-
-            self_aln_list[aln[i]->read_A_id_].push_back(std::pair<int, int>(aln[i]->read_A_match_start_, aln[i]->read_A_match_end_));
-            self_aln_list[aln[i]->read_A_id_].push_back(std::pair<int, int>(aln[i]->read_B_match_start_, aln[i]->read_B_match_end_));
+            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
         }
-        if (aln[i]->active)
+        else
         {
             idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
+            idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
         }
     }
 
@@ -129,13 +128,13 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     fprintf(stdout, "INFO, profile coverage\n");
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         std::vector<std::pair<int, int>> coverage;
         std::vector<std::pair<int, int>> cg;
 
         // profileCoverage: get the coverage based on pile-o-gram
-        profileCoverage(idx_pileup[i], coverage, param.reso);
+        profileCoverage1(idx_pileup[i], coverage, param.reso, reads[i]);
 
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)
@@ -145,14 +144,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         cov_grad << "read " << i << " ";
         // Computes coverage gradients.
         if (coverage.size() >= 2){
-            for (int j = 1; j < coverage.size() - 1; j++)
+            for (int j = 1; j < coverage.size(); j++)
             {
                 cg.push_back(std::pair<int, int>(coverage[j].first, coverage[j].second - coverage[j - 1].second));
                 cov_grad << cg[j].first << "," << cg[j].second << " ";
             }
         }
-        else
-            cg.push_back(std::pair<int, int>(0, 0));
 
         cov_grad << std::endl;
 
@@ -170,10 +167,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int read_slot = 0;
     // Finding the average coverage
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
-        if (reads[i]->len < 5000)
-            continue;
         read_cov = 0;
         read_slot = 0;
         for (int j = 0; j < coverages[i].size(); j++)
@@ -204,7 +199,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     fprintf(stdout, "INFO, mask vector\n");
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
 
         // get the longest consecutive region that has decent coverage, decent coverage = estimated coverage / 3
@@ -242,16 +237,16 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     fprintf(stdout, "INFO, repeats\n");
 
     // detect repeats based on coverage gradient, mark it has rising (1) or falling (-1)
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         std::vector<std::pair<int, int>> anno;
-        for (int j = 0; j < cgs[i].size() - 1; j++)
+        for (int j = 0; j < cgs[i].size(); j++)
         {
 
             if ((cgs[i][j].first >= maskvec[i].first) and (cgs[i][j].first <= maskvec[i].second))
             {
                 if (cgs[i][j].second > std::min(
-                                           std::max((coverages[i][j].second + min_cov) / param.cov_frac, cov_est/2),
+                                           std::max((coverages[i][j].second + min_cov) / param.cov_frac, cov_est / 2),
                                            cov_est * 2))
                 {
                     anno.push_back(std::pair<int, int>(cgs[i][j].first, 1));
@@ -268,7 +263,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     }
 
     // // clean it a bit, merge consecutive 1 or consecutive -1 if their position is within gap_threshold
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         for (std::vector<std::pair<int, int>>::iterator iter = repeat_annotation[i].begin(); iter < repeat_annotation[i].end();)
         {
@@ -297,7 +292,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int count_repeat_reads = 0;
     int count_repeat_annos = 0;
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         repeat_anno << "read " << i << ", ";
         repeat_anno << "repeat annos " << repeat_annotation[i].size() << ":";
@@ -315,7 +310,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     fprintf(stdout, "INFO, Number of reads with repeats:  %d\n", count_repeat_reads);
     fprintf(stdout, "INFO, Number of repeat annos:  %d\n", count_repeat_annos);
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         repeats[i] = std::vector<std::tuple<int, int, int>>();
 
@@ -405,6 +400,14 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
                 if(repeat_length > param.repeat_length){
                     repeats[i].push_back(std::tuple<int, int, int>(repeat_annotation[i][j].first, -1, repeat_length));
                     reads[i]->preserve = 1;
+                    if (reads[i]->align.compare("forward") == 0)
+                    {
+                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + repeat_annotation[i][j].first - repeat_length << "\t" << reads[i]->start_pos + repeat_annotation[i][j].first << std::endl;
+                    }
+                    else if (reads[i]->align.compare("reverse") == 0)
+                    {
+                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first + repeat_length << std::endl;
+                    }
                 }
 
             }
@@ -495,6 +498,14 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
                 {
                     repeats[i].push_back(std::tuple<int, int, int>(repeat_annotation[i][j].first, -1, repeat_length));
                     reads[i]->preserve = 1;
+                    if (reads[i]->align.compare("forward") == 0)
+                    {
+                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + repeat_annotation[i][j].first << "\t" << reads[i]->start_pos + repeat_annotation[i][j].first + repeat_length << std::endl;
+                    }
+                    else if (reads[i]->align.compare("reverse") == 0)
+                    {
+                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first - repeat_length<< "\t" << reads[i]->end_pos - repeat_annotation[i][j].first << std::endl;
+                    }
                 }
             }
         }
@@ -503,7 +514,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     int count_long_repeat_reads = 0;
     int count_long_repeats = 0;
 
-    for (int i = r_begin; i <= r_end; i++)
+    for (int i = 0; i < n_read; i++)
     {
         long_repeats << "read " << i << ", ";
         long_repeats << "long repeats " << repeats[i].size() << ":";
@@ -524,9 +535,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
     fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
     fprintf(stdout, "INFO, Number of long repeats:  %d\n", count_long_repeats);
 }
- */
 
-void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
+void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
 
     int intervals = read->len / reso ;
@@ -573,17 +583,17 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
     return;
 }
 
-void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param){
+void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param){
 
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
     std::vector<std::tuple<int, int, int>> repeats;
 
-    std::ofstream cov(param.outputfilename + ".coverage.txt");
-    std::ofstream repeat_reg(param.outputfilename + ".repeats.txt");
-    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
-    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
+    std::ofstream cov(param.outputfilename + ".coverage2.txt");
+    std::ofstream repeat_reg(param.outputfilename + ".repeats2.txt");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats2.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats2.bed");
 
     int r_begin = aln.front()->read_A_id_;
     int r_end = aln.back()->read_A_id_;
@@ -620,7 +630,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         std::vector<std::pair<int, int>> coverage;
 
         // profileCoverage: get the coverage based on pile-o-gram
-        profileCoverage(idx_pileup[i], coverage, param.reso, reads[i]);
+        profileCoverage2(idx_pileup[i], coverage, param.reso, reads[i]);
 
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)

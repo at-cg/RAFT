@@ -139,7 +139,14 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
     n_read = loadFASTA(readfilename, reads);
     n_aln = loadPAF(paffilename, aln);
 
-    repeat_annotate(reads, aln, param);
+    if (param.h==1){
+        repeat_annotate1(reads, aln, param);
+    }else if (param.h==2){
+        repeat_annotate2(reads, aln, param);
+    }else if (param.h==3){
+        repeat_annotate1(reads, aln, param);
+        repeat_annotate2(reads, aln, param);
+    }
 
     int read_num = 1;
 
