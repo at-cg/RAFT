@@ -198,6 +198,16 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
             }
         }
 
+        if (end > start)
+        {
+            if (end - start > maxlen)
+            {
+                maxlen = end - start;
+                maxstart = start;
+                maxend = end;
+            }
+        }
+
         maskvec[i] = (std::pair<int, int>(maxstart, maxend));
         mask << "read " << i << " " << maxstart << " " << maxend << std::endl;
     }
@@ -306,7 +316,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                         (idx_pileup[i][k]->read_A_match_end_ <
                          repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                         {
-                            read_other_ends.push_back(idx_pileup[i][k]->read_A_match_start_);
+                            read_other_ends.push_back(idx_pileup[i][k]->read_A_match_start_ - 1);
                             support++;
                         }
                     else if ((idx_pileup[i][k]->read_B_id_ == i) and (idx_pileup[i][k]->read_B_match_end_ > 
@@ -314,7 +324,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                             (idx_pileup[i][k]->read_B_match_end_ <
                             repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                             {
-                                read_other_ends.push_back(idx_pileup[i][k]->read_B_match_start_);
+                                read_other_ends.push_back(idx_pileup[i][k]->read_B_match_start_ - 1);
                                 support++;
                             }
                 }
@@ -407,7 +417,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                         (idx_pileup[i][k]->read_A_match_start_ <
                          repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                     {
-                        read_other_ends.push_back(idx_pileup[i][k]->read_A_match_end_);
+                        read_other_ends.push_back(idx_pileup[i][k]->read_A_match_end_ - 1);
                         support++;
                     }
                     else if ((idx_pileup[i][k]->read_B_id_ == i) and (idx_pileup[i][k]->read_B_match_start_ >  
@@ -415,7 +425,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                              (idx_pileup[i][k]->read_B_match_start_ <
                               repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                     {
-                        read_other_ends.push_back(idx_pileup[i][k]->read_B_match_end_);
+                        read_other_ends.push_back(idx_pileup[i][k]->read_B_match_end_ - 1);
                         support++;
                     }
                 }
@@ -588,7 +598,7 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
     for (int i = 0; i < n_read; i++)
     {
-         coverages.push_back(std::vector<std::pair<int, int>>());
+        coverages.push_back(std::vector<std::pair<int, int>>());
         repeats.push_back(std::tuple<int, int, int>());
     }
 
@@ -633,7 +643,7 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
             {
                 if (end > start)
                 {
-                    if (end - start > maxlen)
+                    if ((end - start) > maxlen)
                     {
                         maxlen = end - start;
                         maxstart = start;
@@ -642,6 +652,16 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                 }
                 start = coverages[i][j + 1].first;
                 end = start;
+            }
+        }
+
+        if (end > start)
+        {
+            if ((end - start) > maxlen)
+            {
+                maxlen = end - start;
+                maxstart = start;
+                maxend = end;
             }
         }
 
