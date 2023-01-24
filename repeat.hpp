@@ -51,13 +51,13 @@ void profileCoverage1(std::vector<Overlap *> &alignments, std::vector<std::pair<
     {
         if (alignments[i]->read_A_id_ == read->id)
         {
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, 1));
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_end_, -1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ - 1, 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_end_ - 1, -1));
         }
         if (alignments[i]->read_B_id_ == read->id)
         {
-            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_, 1));
-            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_end_, -1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ - 1, 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_end_ - 1, -1));
         }
     }
 
@@ -68,7 +68,7 @@ void profileCoverage1(std::vector<Overlap *> &alignments, std::vector<std::pair<
     int count = 0;
     while (pos < events.size())
     {
-        while ((events[pos].first < (i+1) * reso) and (pos < events.size()))
+        while ((events[pos].first < (i + 1) * reso) and (pos < events.size()))
         {
             count += events[pos].second;
             pos++;
@@ -143,7 +143,8 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
         cov_grad << "read " << i << " ";
         // Computes coverage gradients.
-        if (coverage.size() >= 2){
+        if (coverage.size() >= 2)
+        {
             for (int j = 1; j < coverage.size(); j++)
             {
                 cg.push_back(std::pair<int, int>(coverage[j].first, coverage[j].second - coverage[j - 1].second));
@@ -153,8 +154,8 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
         cov_grad << std::endl;
 
-        coverages[i]=coverage;
-        cgs[i]=cg;
+        coverages[i] = coverage;
+        cgs[i] = cg;
     }
 
     fprintf(stdout, "INFO, profile coverage done\n");
@@ -223,7 +224,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                         maxend = end;
                     }
                 }
-                start = coverages[i][j+1].first;
+                start = coverages[i][j + 1].first;
                 end = start;
             }
         }
@@ -252,8 +253,8 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                     anno.push_back(std::pair<int, int>(cgs[i][j].first, 1));
                 }
                 else if (cgs[i][j].second < -std::min(
-                                                std::max((coverages[i][j].second + min_cov) / param.cov_frac, cov_est/2),
-                         cov_est * 2))
+                                                std::max((coverages[i][j].second + min_cov) / param.cov_frac, cov_est / 2),
+                                                cov_est * 2))
                 {
                     anno.push_back(std::pair<int, int>(cgs[i][j].first, -1));
                 }
@@ -330,21 +331,21 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                     temp_id = idx_pileup[i][k]->read_B_id_;
 
                     if ((idx_pileup[i][k]->read_A_match_end_ >
-                            repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
+                         repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
                         (idx_pileup[i][k]->read_A_match_end_ <
-                            repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
+                         repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                     {
                         read_other_ends.push_back(idx_pileup[i][k]->read_A_match_start_);
                         support++;
                     }
                 }
 
-                if (support < (cov_est/2))
+                if (support < (cov_est / 2))
                 {
                     continue;
                 }
 
-                int bridge_threshold = 3 * (support/4);
+                int bridge_threshold = 3 * (support / 4);
 
                 std::sort(read_other_ends.begin(), read_other_ends.end(), pairAscend);
 
@@ -362,7 +363,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
                         if ((num_reads_extending_to_end > bridge_threshold) or
                             ((num_reads_considered > bridge_threshold) and
-                                (read_other_ends[id] - read_other_ends[0] > param.repeat_annotation_gap_thres)))
+                             (read_other_ends[id] - read_other_ends[0] > param.repeat_annotation_gap_thres)))
                         {
                             bridged = false;
                             repeat_length = repeat_annotation[i][j].first - maskvec[i].first;
@@ -397,7 +398,8 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                         }
                     }
                 }
-                if(repeat_length > param.repeat_length){
+                if (repeat_length > param.repeat_length)
+                {
                     repeats[i].push_back(std::tuple<int, int, int>(repeat_annotation[i][j].first, -1, repeat_length));
                     reads[i]->preserve = 1;
                     if (reads[i]->align.compare("forward") == 0)
@@ -409,9 +411,9 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                         long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first + repeat_length << std::endl;
                     }
                 }
-
             }
-            else{
+            else
+            {
 
                 bool bridged = true;
                 int support = 0;
@@ -424,25 +426,24 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                     int temp_id;
                     temp_id = idx_pileup[i][k]->read_B_id_;
 
-
                     if ((idx_pileup[i][k]->read_A_match_start_ >
-                            repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
+                         repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
                         (idx_pileup[i][k]->read_A_match_start_ <
-                            repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
+                         repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                     {
 
                         read_other_ends.push_back(idx_pileup[i][k]->read_A_match_end_);
                         support++;
                     }
                 }
-                if (support < (cov_est/2))
+                if (support < (cov_est / 2))
                 {
                     continue;
                 }
 
-                int bridge_threshold = 3 * (support/4);
+                int bridge_threshold = 3 * (support / 4);
 
-                    std::sort(read_other_ends.begin(), read_other_ends.end(), pairDescend); // Sort in descending order
+                std::sort(read_other_ends.begin(), read_other_ends.end(), pairDescend); // Sort in descending order
 
                 int num_reads_considered = 0;
                 int num_reads_extending_to_end = 0;
@@ -504,7 +505,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                     }
                     else if (reads[i]->align.compare("reverse") == 0)
                     {
-                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first - repeat_length<< "\t" << reads[i]->end_pos - repeat_annotation[i][j].first << std::endl;
+                        long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first - repeat_length << "\t" << reads[i]->end_pos - repeat_annotation[i][j].first << std::endl;
                     }
                 }
             }
@@ -520,7 +521,8 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
         long_repeats << "long repeats " << repeats[i].size() << ":";
         for (auto &r : repeats[i])
         {
-            if(std::get<2>(r) > param.repeat_length){
+            if (std::get<2>(r) > param.repeat_length)
+            {
                 count_long_repeats++;
                 long_repeats << std::get<0>(r) << ",";
                 long_repeats << std::get<1>(r) << ",";
@@ -539,27 +541,30 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
 
-    int intervals = read->len / reso ;
+    int intervals = read->len / reso;
 
-    if(intervals % reso){
+    if (intervals % reso)
+    {
         intervals++;
     }
 
     for (int i = 0; i < intervals; i++)
     {
         coverage.push_back(std::pair<int, int>());
-        coverage.at(i).first = i * reso;
+        coverage[i].first = i * reso;
     }
 
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
     std::vector<std::pair<int, int>> events;
     for (int i = 0; i < alignments.size(); i++)
     {
-        if (alignments[i]->read_A_id_ == read->id){
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, alignments[i]->read_A_match_end_));
+        if (alignments[i]->read_A_id_ == read->id)
+        {
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ - 1, alignments[i]->read_A_match_end_ - 1));
         }
-        if (alignments[i]->read_B_id_ == read->id){
-            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_, alignments[i]->read_B_match_end_));
+        if (alignments[i]->read_B_id_ == read->id)
+        {
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ - 1,  alignments[i]->read_B_match_end_ - 1));
         }
     }
 
@@ -569,10 +574,11 @@ void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<
     int i = 0;
     while (pos < events.size())
     {
-        while ((events[pos].first < (i+1) * reso) and (pos < events.size()))
+        while ((events[pos].first < (i + 1) * reso) and (pos < events.size()))
         {
             int k = i;
-            while (events[pos].second >= k * reso){
+            while (events[pos].second >= k * reso)
+            {
                 coverage[k].second++;
                 k++;
             }
@@ -583,7 +589,8 @@ void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<
     return;
 }
 
-void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param){
+void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param)
+{
 
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
@@ -685,9 +692,12 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
             long_repeats << "read " << i << ", ";
             long_repeats << maxstart << "," << maxend << "," << maxlen << std::endl;
             count_long_repeat_reads++;
-            if (reads[i]->align.compare("forward") == 0){
+            if (reads[i]->align.compare("forward") == 0)
+            {
                 long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + maxstart << "\t" << reads[i]->start_pos + maxend << std::endl;
-            } else if (reads[i]->align.compare("reverse") == 0){
+            }
+            else if (reads[i]->align.compare("reverse") == 0)
+            {
                 long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - maxend << "\t" << reads[i]->end_pos - maxstart << std::endl;
             }
         }

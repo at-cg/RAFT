@@ -6,7 +6,7 @@ PREFIX=output
 
 rm ${PREFIX}*
 
-$EXE -e 20 -o ${PREFIX} -h 3 $READS $OVERLAPS 
+$EXE -e 20 -o ${PREFIX} -h 2 $READS $OVERLAPS 
 
 grep ">" $OUTPUTSEQ > ${OUTPUTSEQ}.headers
 cat ${OUTPUTSEQ}.headers | awk -F '[=,-]' '{print $9"\t"$5"\t"$6}' | sort -k 1,1 -k2,2n -k3,3nr > ${OUTPUTSEQ}.headers.bed

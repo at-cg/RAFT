@@ -18,7 +18,7 @@ public:
     int read_A_id_, read_B_id_;
     int alen; // length of read a
     int blen; // length of read b
-     int diffs; // differences
+    int diffs; // differences
     int read_A_match_start_, read_B_match_start_; // starting position alignment in read a and read b
     int read_A_match_end_, read_B_match_end_; // ending position of alignment in read a and read b
     int reverse_complement_match_; // reverse_complement_match_, reverse complement = 1, same direction = 0

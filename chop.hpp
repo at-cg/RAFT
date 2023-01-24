@@ -103,22 +103,20 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
     gzFile fp;
     kseq_t *seq;
     int l;
-    int num = 0;
-
     fp = gzopen(fn, "r");
     seq = kseq_init(fp);
-
+    int num = 0;
 
     while ((l = kseq_read(seq)) >= 0)
     {
-            Read *new_r = new Read(num, strlen(seq->seq.s), std::string(seq->name.s), std::string(seq->seq.s), 
-            get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s), 
-            get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
+            Read *new_r = new Read(get_id_from_string(seq->name.s) -1, strlen(seq->seq.s), std::string(seq->name.s), 
+                                std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
+                                get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
             reads.push_back(new_r);
             num++;
     }
 
-        kseq_destroy(seq);
+    kseq_destroy(seq);
     gzclose(fp);
 
     return num;
