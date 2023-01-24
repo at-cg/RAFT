@@ -117,7 +117,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
             for (int j = 1; j < coverage.size(); j++)
             {
                 cg.push_back(std::pair<int, int>(coverage[j].first, coverage[j].second - coverage[j - 1].second));
-                cov_grad << cg[j].first << "," << cg[j].second << " ";
+                cov_grad << cg[j-1].first << "," << cg[j-1].second << " ";
             }
         }
 
@@ -299,14 +299,24 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
                     int temp_id;
                     temp_id = idx_pileup[i][k]->read_B_id_;
 
-                    if ((idx_pileup[i][k]->read_A_match_end_ >
+
+
+                    if ((idx_pileup[i][k]->read_A_id_==i) and (idx_pileup[i][k]->read_A_match_end_ >
                          repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
                         (idx_pileup[i][k]->read_A_match_end_ <
                          repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
-                    {
-                        read_other_ends.push_back(idx_pileup[i][k]->read_A_match_start_);
-                        support++;
-                    }
+                        {
+                            read_other_ends.push_back(idx_pileup[i][k]->read_A_match_start_);
+                            support++;
+                        }
+                    else if ((idx_pileup[i][k]->read_B_id_ == i) and (idx_pileup[i][k]->read_B_match_end_ > 
+                            repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
+                            (idx_pileup[i][k]->read_B_match_end_ <
+                            repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
+                            {
+                                read_other_ends.push_back(idx_pileup[i][k]->read_B_match_start_);
+                                support++;
+                            }
                 }
 
                 if (support < (cov_est / 2))
@@ -392,19 +402,24 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
 
                 for (int k = 0; k < idx_pileup[i].size(); k++)
                 {
-                    int temp_id;
-                    temp_id = idx_pileup[i][k]->read_B_id_;
 
-                    if ((idx_pileup[i][k]->read_A_match_start_ >
-                         repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
+                    if ((idx_pileup[i][k]->read_A_id_ == i) and (idx_pileup[i][k]->read_A_match_start_ > repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
                         (idx_pileup[i][k]->read_A_match_start_ <
                          repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
                     {
-
                         read_other_ends.push_back(idx_pileup[i][k]->read_A_match_end_);
                         support++;
                     }
+                    else if ((idx_pileup[i][k]->read_B_id_ == i) and (idx_pileup[i][k]->read_B_match_start_ >  
+                            repeat_annotation[i][j].first - param.repeat_annotation_gap_thres / 2) and
+                             (idx_pileup[i][k]->read_B_match_start_ <
+                              repeat_annotation[i][j].first + param.repeat_annotation_gap_thres / 2))
+                    {
+                        read_other_ends.push_back(idx_pileup[i][k]->read_B_match_end_);
+                        support++;
+                    }
                 }
+
                 if (support < (cov_est / 2))
                 {
                     continue;
