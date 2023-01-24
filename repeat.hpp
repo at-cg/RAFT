@@ -9,16 +9,6 @@
 #include "overlap.hpp"
 #include "param.hpp"
 
-#ifndef COMPARE_OVERLAP
-#define COMPARE_OVERLAP
-bool compare_overlap(Overlap *ovl1, Overlap *ovl2)
-{
-    // Returns True if the sum of the match lengths of the two reads in ovl1 > the sum of the  overlap lengths of the two reads in ovl2
-    // Returns False otherwise.
-    return ((ovl1->read_A_match_end_ - ovl1->read_A_match_start_ + ovl1->read_B_match_end_ - ovl1->read_B_match_start_) > (ovl2->read_A_match_end_ - ovl2->read_A_match_start_ + ovl2->read_B_match_end_ - ovl2->read_B_match_start_));
-}
-#endif
-
 #ifndef COMPARE_EVENT
 #define COMPARE_EVENT
 bool compare_event(std::pair<int, int> event1, std::pair<int, int> event2)
@@ -79,11 +69,11 @@ void profileCoverage1(std::vector<Overlap *> &alignments, std::vector<std::pair<
     return;
 }
 
-void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param)
+void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param, std::vector<std::vector<Overlap *>> idx_pileup)
 {
     int n_read = reads.size();
-    std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
-    std::vector<std::vector<std::pair<int, int>>> cgs(n_read); // coverage gradient;
+    std::vector<std::vector<std::pair<int, int>>> coverages;
+    std::vector<std::vector<std::pair<int, int>>> cgs; // coverage gradient;
     std::vector<std::pair<int, int>> maskvec;
     std::vector<std::vector<std::pair<int, int>>> repeat_annotation;
     std::unordered_map<int, std::vector<std::tuple<int, int, int>>> repeats;
@@ -95,35 +85,14 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
     std::ofstream long_repeats(param.outputfilename + ".long_repeats1.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats1.bed");
 
-    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
-
     fprintf(stdout, "INFO, length of alignments  %lu()\n", aln.size());
 
     for (int i = 0; i < n_read; i++)
     {
-        idx_pileup.push_back(std::vector<Overlap *>());
         repeat_annotation.push_back(std::vector<std::pair<int, int>>());
         coverages.push_back(std::vector<std::pair<int, int>>());
         cgs.push_back(std::vector<std::pair<int, int>>());
         maskvec.push_back(std::pair<int, int>());
-    }
-
-    for (int i = 0; i < aln.size(); i++)
-    {
-        if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
-        {
-            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
-        }
-        else
-        {
-            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
-            idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
-        }
-    }
-
-    for (int i = 0; i < n_read; i++)
-    { // sort overlaps of a reads
-        std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
     }
 
     fprintf(stdout, "INFO, profile coverage\n");
@@ -589,12 +558,11 @@ void profileCoverage2(std::vector<Overlap *> &alignments, std::vector<std::pair<
     return;
 }
 
-void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param)
+void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, const algoParams &param, std::vector<std::vector<Overlap *>> idx_pileup)
 {
 
     int n_read = reads.size();
-    std::vector<std::vector<std::pair<int, int>>> coverages(n_read);
-    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
+    std::vector<std::vector<std::pair<int, int>>> coverages;
     std::vector<std::tuple<int, int, int>> repeats;
 
     std::ofstream cov(param.outputfilename + ".coverage2.txt");
@@ -602,32 +570,11 @@ void repeat_annotate2(std::vector<Read *> reads, std::vector<Overlap *> aln, con
     std::ofstream long_repeats(param.outputfilename + ".long_repeats2.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats2.bed");
 
-    int r_begin = aln.front()->read_A_id_;
-    int r_end = aln.back()->read_A_id_;
 
     for (int i = 0; i < n_read; i++)
     {
-        idx_pileup.push_back(std::vector<Overlap *>());
-        coverages.push_back(std::vector<std::pair<int, int>>());
+         coverages.push_back(std::vector<std::pair<int, int>>());
         repeats.push_back(std::tuple<int, int, int>());
-    }
-
-    for (int i = 0; i < aln.size(); i++)
-    {
-        if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
-        {
-            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
-        }
-        else
-        {
-            idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
-            idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
-        }
-    }
-
-    for (int i = 0; i < n_read; i++)
-    { // sort overlaps of a reads
-        std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
     }
 
     fprintf(stdout, "INFO, profile coverage\n");

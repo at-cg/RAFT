@@ -1,6 +1,24 @@
 #include "repeat.hpp"
 #include <unistd.h>
 
+#ifndef COMPARE_READ
+#define COMPARE_READ
+bool compare_read(Read * read1, Read * read2)
+{
+    return read1->id < read2->id;
+}
+#endif
+
+#ifndef COMPARE_OVERLAP
+#define COMPARE_OVERLAP
+bool compare_overlap(Overlap *ovl1, Overlap *ovl2)
+{
+    // Returns True if the sum of the match lengths of the two reads in ovl1 > the sum of the  overlap lengths of the two reads in ovl2
+    // Returns False otherwise.
+    return ((ovl1->read_A_match_end_ - ovl1->read_A_match_start_ + ovl1->read_B_match_end_ - ovl1->read_B_match_start_) > (ovl2->read_A_match_end_ - ovl2->read_A_match_start_ + ovl2->read_B_match_end_ - ovl2->read_B_match_start_));
+}
+#endif
+
 int get_id_from_string(const char *name_str)
 {
     const char *sub0 = strchr(name_str, '=') + 1;
@@ -119,6 +137,9 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
     kseq_destroy(seq);
     gzclose(fp);
 
+   std::sort(reads.begin(), reads.end(), compare_read);
+
+
     return num;
 }
 
@@ -137,13 +158,38 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
     n_read = loadFASTA(readfilename, reads);
     n_aln = loadPAF(paffilename, aln);
 
+    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
+
+    for (int i = 0; i < n_read; i++)
+    {
+            idx_pileup.push_back(std::vector<Overlap *>());
+    }
+
+    for (int i = 0; i < aln.size(); i++)
+    {
+            if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
+            {
+                idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
+            }
+            else
+            {
+                idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
+                idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
+            }
+    }
+
+    for (int i = 0; i < n_read; i++)
+    { // sort overlaps of a reads
+            std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
+    }
+
     if (param.h==1){
-        repeat_annotate1(reads, aln, param);
+        repeat_annotate1(reads, aln, param, idx_pileup);
     }else if (param.h==2){
-        repeat_annotate2(reads, aln, param);
+        repeat_annotate2(reads, aln, param, idx_pileup);
     }else if (param.h==3){
-        repeat_annotate1(reads, aln, param);
-        repeat_annotate2(reads, aln, param);
+        repeat_annotate1(reads, aln, param, idx_pileup);
+        repeat_annotate2(reads, aln, param, idx_pileup);
     }
 
     int read_num = 1;
