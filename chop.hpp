@@ -183,14 +183,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
     }
 
-    if (param.h==1){
-        repeat_annotate1(reads, aln, param, idx_pileup);
-    }else if (param.h==2){
-        repeat_annotate2(reads, aln, param, idx_pileup);
-    }else if (param.h==3){
-        repeat_annotate1(reads, aln, param, idx_pileup);
-        repeat_annotate2(reads, aln, param, idx_pileup);
-    }
+    repeat_annotate(reads, aln, param, idx_pileup);
 
     int read_num = 1;
 
