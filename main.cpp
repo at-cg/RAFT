@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             params.est_cov = atoi(optarg);
             break;
         case 'm':
-            params.cov_mul = atoi(optarg);
+            params.cov_mul = std::stod(optarg);
             break;
         case 'l':
             params.repeat_length = atoi(optarg);
