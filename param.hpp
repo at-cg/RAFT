@@ -27,7 +27,7 @@ struct algoParams
         uniform_read_length = overlap_length * 2;
         read_length_threshold = 25000;
         outputfilename = "chopper";
-        h=2;
+        h=0;
     }
 
     void printParams()

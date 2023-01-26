@@ -185,6 +185,10 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
     repeat_annotate(reads, aln, param, idx_pileup);
 
+    if(param.h){
+            repeat_annotate1(reads, aln, param, idx_pileup);
+    }
+
     int read_num = 1;
 
     int overlap_length = param.overlap_length;

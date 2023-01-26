@@ -33,7 +33,7 @@ bool pairDescend(int &firstElem, int &secondElem)
 }
 #endif
 
-/*
+
 void profileCoverage1(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
@@ -532,7 +532,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<Overlap *> aln, con
     fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
     fprintf(stdout, "INFO, Number of long repeats:  %d\n", count_long_repeats);
 }
-*/
+
 
 void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
