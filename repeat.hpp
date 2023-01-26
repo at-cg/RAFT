@@ -669,7 +669,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
         repeat_reg << "longest_repeat_reg " << maxstart << "," << maxend << "," << maxlen << std::endl;
 
-        if (maxlen > param.repeat_length)
+        if (maxlen >= param.repeat_length)
         {
             repeats[i] = std::tuple<int, int, int>(maxstart, maxend, maxlen);
             reads[i]->preserve = 1;
