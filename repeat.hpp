@@ -637,7 +637,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
         int maxlen = 0, maxstart = 0, maxend = 0;
         for (int j = 0; j < coverages[i].size(); j++)
         {
-            if (coverages[i][j].second > high_cov)
+            if (coverages[i][j].second >= high_cov)
             {
                 end = coverages[i][j].first + param.reso - 1;
             }
