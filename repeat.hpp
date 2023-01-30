@@ -590,18 +590,15 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     int n_read = reads.size();
     std::vector<std::vector<std::pair<int, int>>> coverages;
-    std::vector<std::tuple<int, int, int>> repeats;
 
-    std::ofstream cov(param.outputfilename + ".coverage2.txt");
-    std::ofstream repeat_reg(param.outputfilename + ".repeats2.txt");
-    std::ofstream long_repeats(param.outputfilename + ".long_repeats2.txt");
-    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats2.bed");
+    std::ofstream cov(param.outputfilename + ".coverage.txt");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
 
 
     for (int i = 0; i < n_read; i++)
     {
         coverages.push_back(std::vector<std::pair<int, int>>());
-        repeats.push_back(std::tuple<int, int, int>());
     }
 
     fprintf(stdout, "INFO, profile coverage\n");
@@ -629,12 +626,9 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
 
     for (int i = 0; i < n_read; i++)
     {
-        repeat_reg << "read " << i << ", ";
-
         // get the longest consecutive region that has high coverage, high coverage = estimated coverage * 1.5
         int start = 0;
         int end = start;
-        int maxlen = 0, maxstart = 0, maxend = 0;
         for (int j = 0; j < coverages[i].size(); j++)
         {
             if (coverages[i][j].second >= high_cov)
@@ -643,49 +637,77 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
             }
             else
             {
-                if (end > start)
+                if ((end - start) >= param.repeat_length)
                 {
-                    if ((end - start) > maxlen)
+                    if (reads[i]->len - end <= param.uniform_read_length)
                     {
-                        maxlen = end - start;
-                        maxstart = start;
-                        maxend = end;
+                        end = reads[i]->len;
                     }
+                    if(start <= param.uniform_read_length){
+                        start = 0;
+                    }
+                    if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.uniform_read_length)
+                    {
+
+                        std::get<1>(reads[i]->long_repeats.back()) = end;
+                        std::get<2>(reads[i]->long_repeats.back()) = end - std::get<0>(reads[i]->long_repeats.back());
+                    }
+                    else
+                    {
+                        reads[i]->long_repeats.push_back(std::tuple<int, int, int>(start, end, end - start));
+                    }
+                    reads[i]->preserve = 1;
                 }
                 start = coverages[i][j + 1].first;
                 end = start;
             }
         }
 
-        if (end > start)
+        if ((end - start) >= param.repeat_length)
         {
-            if ((end - start) > maxlen)
+            if (reads[i]->len - end <= param.uniform_read_length)
             {
-                maxlen = end - start;
-                maxstart = start;
-                maxend = end;
+                end = reads[i]->len;
             }
-        }
+            if (start <= param.uniform_read_length)
+            {
+                start = 0;
+            }
 
-        repeat_reg << "longest_repeat_reg " << maxstart << "," << maxend << "," << maxlen << std::endl;
+            if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.uniform_read_length)
+            {
+                std::get<1>(reads[i]->long_repeats.back()) = end;
+                std::get<2>(reads[i]->long_repeats.back()) = end - std::get<0>(reads[i]->long_repeats.back());
+            }
+            else
+            {
+                reads[i]->long_repeats.push_back(std::tuple<int, int, int>(start, end, end - start));
+            }
 
-        if (maxlen >= param.repeat_length)
-        {
-            repeats[i] = std::tuple<int, int, int>(maxstart, maxend, maxlen);
             reads[i]->preserve = 1;
-            long_repeats << "read " << i << ", ";
-            long_repeats << maxstart << "," << maxend << "," << maxlen << std::endl;
-            count_long_repeat_reads++;
-            if (reads[i]->align.compare("forward") == 0)
-            {
-                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + maxstart << "\t" << reads[i]->start_pos + maxend << std::endl;
-            }
-            else if (reads[i]->align.compare("reverse") == 0)
-            {
-                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - maxend << "\t" << reads[i]->end_pos - maxstart << std::endl;
-            }
         }
     }
 
-    fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
+    for (int i = 0; i < n_read; i++)
+    {
+        long_repeats << "read " << i << ", ";
+        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
+        {
+            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j])
+                         << "," << std::get<2>(reads[i]->long_repeats[j])<<"    ";
+            if (reads[i]->align.compare("forward") == 0)
+            {
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + std::get<0>(reads[i]->long_repeats[j])
+                                 << "\t" << reads[i]->start_pos + std::get<1>(reads[i]->long_repeats[j]) << std::endl;
+            }
+            else if (reads[i]->align.compare("reverse") == 0)
+            {
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - std::get<1>(reads[i]->long_repeats[j])
+                                 << "\t" << reads[i]->end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
+            }
+        }
+
+        long_repeats << std::endl;
+    }
+
 }
