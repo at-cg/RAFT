@@ -558,7 +558,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
         {
             events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ - 1, alignments[i]->read_A_match_end_ - 1));
         }
-        if (alignments[i]->read_B_id_ == read->id)
+        else if (alignments[i]->read_B_id_ == read->id)
         {
             events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ - 1,  alignments[i]->read_B_match_end_ - 1));
         }
