@@ -213,8 +213,8 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
                     if(j!=reads[i]->long_repeats.size()){
 
-                    repeat_start = std::get<0>(reads[i]->long_repeats[j]);
-                    repeat_end = std::get<1>(reads[i]->long_repeats[j]);
+                        repeat_start = std::get<0>(reads[i]->long_repeats[j]);
+                        repeat_end = std::get<1>(reads[i]->long_repeats[j]);
                     }else{
                         repeat_start=read_length;
                         repeat_end=read_length;
@@ -224,6 +224,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                         reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
                         reads_final << read_seq << "\n";
                         read_num++;
+                        bed_preserved << reads[i]->chr << "\t" << start_pos << "\t" << end_pos << std::endl;
                     } else if (repeat_start==0){
                         if (align.compare("forward") == 0)
                         {
@@ -250,7 +251,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                     else{
 
                         int parts = (repeat_start-non_repeat_start) / distance;
-                        int k;
+                        int k = 0;
 
                         int overlap_length2 = overlap_length;
                         if (repeat_end == read_length)
@@ -318,14 +319,14 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                                 read_num++;
                             }
 
-                            int last_length = (repeat_start - non_repeat_start + 1) - ((parts - 1) * distance);
+                            int last_length = (repeat_start - non_repeat_start) - ((parts - 1) * distance);
 
                             if (last_length > overlap_length)
                             {
 
                                 reads_final << ">read=" << read_num << "," << align << ",position="
                                             << end_pos - non_repeat_start - k * distance - last_length << "-"
-                                            << end_pos - non_repeat_start + k * distance
+                                            << end_pos - non_repeat_start - k * distance
                                             << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
                                 reads_final << read_seq.substr(non_repeat_start + k * distance, last_length) << "\n";
@@ -354,7 +355,14 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                         }
                     }
 
-                    non_repeat_start = repeat_end+1;
+                    if (repeat_end ==read_length){
+                        break;
+                    }else{
+                        non_repeat_start = repeat_end + 1;
+                    }
+
+                        
+
                 }
         }
         else if (read_length <= param.read_length_threshold )
