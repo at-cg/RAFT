@@ -25,7 +25,7 @@ struct algoParams
         repeat_length = 10000;
         overlap_length = 10000;
         uniform_read_length = overlap_length * 2;
-        read_length_threshold = 25000;
+        read_length_threshold = 20000;
         outputfilename = "chopper";
         h=0;
     }

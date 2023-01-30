@@ -639,14 +639,14 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<Overlap *> aln, cons
             {
                 if ((end - start) >= param.repeat_length)
                 {
-                    if (reads[i]->len - end <= param.uniform_read_length)
+                    if (reads[i]->len - end <= param.overlap_length)
                     {
                         end = reads[i]->len;
                     }
-                    if(start <= param.uniform_read_length){
+                    if(start <= param.overlap_length){
                         start = 0;
                     }
-                    if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.uniform_read_length)
+                    if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.overlap_length)
                     {
 
                         std::get<1>(reads[i]->long_repeats.back()) = end;
