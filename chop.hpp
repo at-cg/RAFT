@@ -77,7 +77,7 @@ std::string get_chr_from_string(const char *name_str)
     return std::string(substr);
 }
 
-int loadPAF(const char *fn, std::vector<Overlap *> &alns)
+void loadPAF(const char *fn, std::vector<Overlap *> &alns)
 {
     paf_file_t *fp;
     paf_rec_t r;
@@ -99,10 +99,6 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
             new_ovl->read_B_match_start_ = r.ts;
             new_ovl->read_A_match_end_ = r.qe;
             new_ovl->read_B_match_end_ = r.te;
-            new_ovl->alen = r.ql;
-            new_ovl->blen = r.tl;
-            new_ovl->reverse_complement_match_ = r.rev;
-            new_ovl->diffs = 0;
             new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
             new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
             alns.push_back(new_ovl);
@@ -110,9 +106,6 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
         //     count_of_non_overlaps++;
         // }
     }
-
-
-    return num;
 }
 
 // parse + save all reads
@@ -139,31 +132,15 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
 
    std::sort(reads.begin(), reads.end(), compare_read);
 
-
     return num;
 }
 
-void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
+void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup)
 {
-
-    std::ofstream reads_final("output_reads.fasta");
-    std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
-    std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
-
-    int n_read;
-    int64_t n_aln = 0;
-    std::vector<Read *> reads;
     std::vector<Overlap *> aln;
+    loadPAF(paffilename, aln);
 
-    n_read = loadFASTA(readfilename, reads);
-    n_aln = loadPAF(paffilename, aln);
-
-    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
-
-    for (int i = 0; i < n_read; i++)
-    {
-            idx_pileup.push_back(std::vector<Overlap *>());
-    }
+    fprintf(stdout, "INFO, length of alignments  %lu()\n", aln.size());
 
     for (int i = 0; i < aln.size(); i++)
     {
@@ -177,17 +154,31 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
             }
     }
+}
+
+void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
+{
+
+    std::ofstream reads_final("output_reads.fasta");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
+    std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
+    std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
+
+    int n_read;
+    std::vector<Read *> reads;
+
+    n_read = loadFASTA(readfilename, reads);
+    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
 
     for (int i = 0; i < n_read; i++)
-    { // sort overlaps of a reads
-            std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
+    {
+            idx_pileup.push_back(std::vector<Overlap *>());
     }
 
-    repeat_annotate(reads, aln, param, idx_pileup);
+    create_pileup(paffilename, idx_pileup);
 
-    if(param.h){
-            repeat_annotate1(reads, aln, param, idx_pileup);
-    }
+    repeat_annotate(reads, param, idx_pileup);
 
     int read_num = 1;
 
@@ -203,13 +194,14 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
         int start_pos = reads[i]->start_pos;
         int end_pos = reads[i]->end_pos;
         std::string align = reads[i]->align;
+        std::string chr = reads[i]->chr;
 
         if (reads[i]->preserve)
         {
             reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
             reads_final << read_seq << "\n";
             read_num++;
-            bed_preserved << reads[i]->chr << "\t" << start_pos << "\t" << end_pos << std::endl;
+            bed_preserved << chr << "\t" << start_pos << "\t" << end_pos << std::endl;
         }
         else if (read_length <= param.read_length_threshold )
         {
@@ -274,7 +266,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 }
             }
 
-            bed_fragmented << reads[i]->chr <<"\t" << start_pos << "\t" << end_pos << std::endl;
+            bed_fragmented << chr <<"\t" << start_pos << "\t" << end_pos << std::endl;
         }
     }
 }
