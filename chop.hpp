@@ -77,7 +77,7 @@ std::string get_chr_from_string(const char *name_str)
     return std::string(substr);
 }
 
-int loadPAF(const char *fn, std::vector<Overlap *> &alns)
+void loadPAF(const char *fn, std::vector<Overlap *> &alns)
 {
     paf_file_t *fp;
     paf_rec_t r;
@@ -110,9 +110,6 @@ int loadPAF(const char *fn, std::vector<Overlap *> &alns)
         //     count_of_non_overlaps++;
         // }
     }
-
-
-    return num;
 }
 
 // parse + save all reads
@@ -143,27 +140,12 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
     return num;
 }
 
-void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
+void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup)
 {
-
-    std::ofstream reads_final("output_reads.fasta");
-    std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
-    std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
-
-    int n_read;
-    int64_t n_aln = 0;
-    std::vector<Read *> reads;
     std::vector<Overlap *> aln;
+    loadPAF(paffilename, aln);
 
-    n_read = loadFASTA(readfilename, reads);
-    n_aln = loadPAF(paffilename, aln);
-
-    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
-
-    for (int i = 0; i < n_read; i++)
-    {
-            idx_pileup.push_back(std::vector<Overlap *>());
-    }
+    fprintf(stdout, "INFO, length of alignments  %lu()\n", aln.size());
 
     for (int i = 0; i < aln.size(); i++)
     {
@@ -177,17 +159,34 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
             }
     }
+}
+
+void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
+{
+
+    std::ofstream reads_final("output_reads.fasta");
+    std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
+    std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
+
+    int n_read;
+    std::vector<Read *> reads;
+
+    n_read = loadFASTA(readfilename, reads);
+    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
+
+    for (int i = 0; i < n_read; i++)
+    {
+            idx_pileup.push_back(std::vector<Overlap *>());
+    }
+
+    create_pileup(paffilename, idx_pileup);
 
     for (int i = 0; i < n_read; i++)
     { // sort overlaps of a reads
             std::sort(idx_pileup[i].begin(), idx_pileup[i].end(), compare_overlap);
     }
 
-    repeat_annotate(reads, aln, param, idx_pileup);
-
-    if(param.h){
-            repeat_annotate1(reads, aln, param, idx_pileup);
-    }
+    repeat_annotate(reads, param, idx_pileup);
 
     int read_num = 1;
 
