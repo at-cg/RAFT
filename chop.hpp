@@ -89,10 +89,6 @@ void loadPAF(const char *fn, std::vector<Overlap *> &alns)
             new_ovl->read_B_match_start_ = r.ts;
             new_ovl->read_A_match_end_ = r.qe;
             new_ovl->read_B_match_end_ = r.te;
-            new_ovl->alen = r.ql;
-            new_ovl->blen = r.tl;
-            new_ovl->reverse_complement_match_ = r.rev;
-            new_ovl->diffs = 0;
             new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
             new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
             alns.push_back(new_ovl);
@@ -114,9 +110,8 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
 
     while ((l = kseq_read(seq)) >= 0)
     {
-            Read *new_r = new Read(get_id_from_string(seq->name.s) -1, strlen(seq->seq.s), std::string(seq->name.s), 
-                                std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
-                                get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
+            Read *new_r = new Read(get_id_from_string(seq->name.s) -1, std::string(seq->name.s), 
+                                std::string(seq->seq.s));
             reads.push_back(new_r);
             num++;
     }
@@ -155,6 +150,8 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 {
 
     std::ofstream reads_final("output_reads.fasta");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
     std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
     std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
 
@@ -183,10 +180,31 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
         std::string read_name = reads[i]->name;
         std::string read_seq = reads[i]->bases;
-        int read_length = reads[i]->len;
-        int start_pos = reads[i]->start_pos;
-        int end_pos = reads[i]->end_pos;
-        std::string align = reads[i]->align;
+        int read_length = strlen(reads[i]->bases.c_str());
+        int start_pos = get_start_pos_from_string(reads[i]->name.c_str());
+        int end_pos = get_end_pos_from_string(reads[i]->name.c_str());
+        std::string align = get_alignment_from_string(reads[i]->name.c_str());
+        std::string chr = get_chr_from_string(reads[i]->name.c_str());
+
+        long_repeats << "read " << i << ", ";
+        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
+        {
+            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j])
+                            << "," << std::get<2>(reads[i]->long_repeats[j]) << "    ";
+            if (align.compare("forward") == 0)
+            {
+                long_repeats_bed << chr << "\t" << start_pos + std::get<0>(reads[i]->long_repeats[j])
+                                 << "\t" << start_pos + std::get<1>(reads[i]->long_repeats[j]) << std::endl;
+            }
+            else if (align.compare("reverse") == 0)
+            {
+                long_repeats_bed << chr << "\t" << end_pos - std::get<1>(reads[i]->long_repeats[j])
+                                 << "\t" << end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
+            }
+        }
+
+        long_repeats << std::endl;
+        
 
         if (reads[i]->preserve)
         {
@@ -208,7 +226,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                         reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
                         reads_final << read_seq << "\n";
                         read_num++;
-                        bed_preserved << reads[i]->chr << "\t" << start_pos << "\t" << end_pos << std::endl;
+                        bed_preserved << chr << "\t" << start_pos << "\t" << end_pos << std::endl;
                     } else if (repeat_start==0){
                         if (align.compare("forward") == 0)
                         {
@@ -218,7 +236,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
                             reads_final << read_seq.substr(0, repeat_end + overlap_length) << "\n";
                             read_num++;
-                            bed_preserved << reads[i]->chr << "\t" << start_pos << "\t" << start_pos + repeat_end + overlap_length << std::endl;
+                            bed_preserved << chr << "\t" << start_pos << "\t" << start_pos + repeat_end + overlap_length << std::endl;
                         }
                         else if (align.compare("reverse") == 0)
                         {
@@ -229,7 +247,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
                             reads_final << read_seq.substr(0, repeat_end + overlap_length) << "\n";
                             read_num++;
-                            bed_preserved << reads[i]->chr << "\t" << end_pos - repeat_end - overlap_length << "\t" << end_pos << std::endl;
+                            bed_preserved << chr << "\t" << end_pos - repeat_end - overlap_length << "\t" << end_pos << std::endl;
                         }
                     }
                     else{
@@ -271,7 +289,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                                 read_num++;
                             }
 
-                            bed_fragmented << reads[i]->chr << "\t" << start_pos + non_repeat_start
+                            bed_fragmented << chr << "\t" << start_pos + non_repeat_start
                                            << "\t" << start_pos + non_repeat_start + k * distance + last_length << std::endl;
 
                             if(repeat_start!=read_length){
@@ -284,7 +302,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
                                 reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length + overlap_length2) << "\n";
                                 read_num++;
-                                bed_preserved << reads[i]->chr << "\t" << start_pos + repeat_start - overlap_length
+                                bed_preserved << chr << "\t" << start_pos + repeat_start - overlap_length
                                               << "\t" << start_pos + repeat_end + overlap_length2 << std::endl;
                             }
 
@@ -317,7 +335,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                                 read_num++;
                             }
 
-                            bed_fragmented << reads[i]->chr << "\t" << end_pos - non_repeat_start - k * distance - last_length
+                            bed_fragmented << chr << "\t" << end_pos - non_repeat_start - k * distance - last_length
                                            << "\t" << end_pos - non_repeat_start << std::endl;
 
                             if (repeat_start != read_length)
@@ -331,7 +349,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                                 reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length + overlap_length2) << "\n";
                                 read_num++;
 
-                                bed_preserved << reads[i]->chr << "\t" << end_pos - repeat_end - overlap_length2
+                                bed_preserved << chr << "\t" << end_pos - repeat_end - overlap_length2
                                               << "\t" << end_pos - repeat_start + overlap_length << std::endl;
                             }
 
@@ -412,7 +430,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
                 }
             }
 
-            bed_fragmented << reads[i]->chr <<"\t" << start_pos << "\t" << end_pos << std::endl;
+            bed_fragmented << chr <<"\t" << start_pos << "\t" << end_pos << std::endl;
         }
     }
 }
