@@ -110,8 +110,9 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads)
 
     while ((l = kseq_read(seq)) >= 0)
     {
-            Read *new_r = new Read(get_id_from_string(seq->name.s) -1, std::string(seq->name.s), 
-                                std::string(seq->seq.s));
+            Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
+                                   std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
+                                   get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
             reads.push_back(new_r);
             num++;
     }
@@ -150,8 +151,6 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 {
 
     std::ofstream reads_final("output_reads.fasta");
-    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
-    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
     std::ofstream bed_fragmented(param.outputfilename + ".fragmentation.bed");
     std::ofstream bed_preserved(param.outputfilename + ".preserved.bed");
 
@@ -178,33 +177,13 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
 
     for (int i = 0; i < n_read; i++){
 
-        std::string read_name = reads[i]->name;
-        std::string read_seq = reads[i]->bases;
-        int read_length = strlen(reads[i]->bases.c_str());
-        int start_pos = get_start_pos_from_string(reads[i]->name.c_str());
-        int end_pos = get_end_pos_from_string(reads[i]->name.c_str());
-        std::string align = get_alignment_from_string(reads[i]->name.c_str());
-        std::string chr = get_chr_from_string(reads[i]->name.c_str());
-
-        long_repeats << "read " << i << ", ";
-        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
-        {
-            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j])
-                            << "," << std::get<2>(reads[i]->long_repeats[j]) << "    ";
-            if (align.compare("forward") == 0)
-            {
-                long_repeats_bed << chr << "\t" << start_pos + std::get<0>(reads[i]->long_repeats[j])
-                                 << "\t" << start_pos + std::get<1>(reads[i]->long_repeats[j]) << std::endl;
-            }
-            else if (align.compare("reverse") == 0)
-            {
-                long_repeats_bed << chr << "\t" << end_pos - std::get<1>(reads[i]->long_repeats[j])
-                                 << "\t" << end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
-            }
-        }
-
-        long_repeats << std::endl;
-        
+            std::string read_name = reads[i]->name;
+            std::string read_seq = reads[i]->bases;
+            int read_length = reads[i]->len;
+            int start_pos = reads[i]->start_pos;
+            int end_pos = reads[i]->end_pos;
+            std::string align = reads[i]->align;
+            std::string chr = reads[i]->chr;
 
         if (reads[i]->preserve)
         {

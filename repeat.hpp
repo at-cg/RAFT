@@ -36,7 +36,7 @@ bool pairDescend(int &firstElem, int &secondElem)
 void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
 {
 
-    int intervals = strlen(read->bases.c_str()) / reso;
+    int intervals = read->len / reso;
 
     if (intervals % reso)
     {
@@ -89,6 +89,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
     int n_read = reads.size();
     std::ofstream cov(param.outputfilename + ".coverage.txt");
+    std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
+    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
 
     int cov_est = param.est_cov;
     int high_cov = cov_est * param.cov_mul;
@@ -166,4 +168,25 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         }
     }
 
-}
+    for (int i = 0; i < n_read; i++)
+    {
+        long_repeats << "read " << i << ", ";
+        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
+        {
+            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j])
+                         << "," << std::get<2>(reads[i]->long_repeats[j]) << "    ";
+            if (reads[i]->align.compare("forward") == 0)
+            {
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + std::get<0>(reads[i]->long_repeats[j])
+                                 << "\t" << reads[i]->start_pos + std::get<1>(reads[i]->long_repeats[j]) << std::endl;
+            }
+            else if (reads[i]->align.compare("reverse") == 0)
+            {
+                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - std::get<1>(reads[i]->long_repeats[j])
+                                 << "\t" << reads[i]->end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
+            }
+        }
+    }
+
+        long_repeats << std::endl;
+    }
