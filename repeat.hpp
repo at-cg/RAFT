@@ -117,7 +117,7 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
             {
                 if ((end - start) >= param.repeat_length)
                 {
-                    if (strlen(reads[i]->bases.c_str()) - end <= param.overlap_length)
+                    if (abs(int(strlen(reads[i]->bases.c_str())) - end) <= param.overlap_length)
                     {
                         end = strlen(reads[i]->bases.c_str());
                     }
@@ -143,7 +143,7 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
         if ((end - start) >= param.repeat_length)
         {
-            if (strlen(reads[i]->bases.c_str()) - end <= param.overlap_length)
+            if (abs(int(strlen(reads[i]->bases.c_str()) - end)) <= param.overlap_length)
             {
                 end = strlen(reads[i]->bases.c_str());
             }
