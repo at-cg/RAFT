@@ -186,7 +186,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
                                  << "\t" << reads[i]->end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
             }
         }
-    }
 
         long_repeats << std::endl;
+    }
+
     }
