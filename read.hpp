@@ -23,7 +23,7 @@ public:
     std::vector<std::tuple<int, int, int>> long_repeats;
 
     Read(int id, int length, std::string name, std::string bases, int start_pos, int end_pos, std::string align, std::string chr) : id(id), bases(bases), name(name), len(length), start_pos(start_pos), end_pos(end_pos), align(align), chr(chr){};
-    Read(int id, std::string name, std::string bases) : id(id), bases(bases), name(name){};
+    Read(int id, int length, std::string name, std::string bases) : id(id), bases(bases), name(name), len(length){};
 
     void showRead()
     {
