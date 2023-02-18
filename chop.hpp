@@ -67,37 +67,6 @@ std::string get_chr_from_string(const char *name_str)
     return std::string(substr);
 }
 
-void loadPAF(const char *fn, std::vector<Overlap *> &alns)
-{
-    paf_file_t *fp;
-    paf_rec_t r;
-    fp = paf_open(fn);
-    int num = 0;
-    int count_of_non_overlaps = 0;
-    while (paf_read(fp, &r) >= 0)
-    {
-        // if (r.qe - r.qs == r.ql || r.te - r.ts == r.tl ||
-        //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||
-        //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
-        //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
-        //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
-        // {
-            num++;
-            Overlap *new_ovl = new Overlap();
-
-            new_ovl->read_A_match_start_ = r.qs;
-            new_ovl->read_B_match_start_ = r.ts;
-            new_ovl->read_A_match_end_ = r.qe;
-            new_ovl->read_B_match_end_ = r.te;
-            new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
-            new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
-            alns.push_back(new_ovl);
-        // } else{
-        //     count_of_non_overlaps++;
-        // }
-    }
-}
-
 // parse + save all reads
 int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &param)
 {
@@ -134,23 +103,44 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &para
 
 void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup)
 {
-    std::vector<Overlap *> aln;
-    loadPAF(paffilename, aln);
-
-    fprintf(stdout, "INFO, length of alignments  %lu()\n", aln.size());
-
-    for (int i = 0; i < aln.size(); i++)
+    paf_file_t *fp;
+    paf_rec_t r;
+    fp = paf_open(paffilename);
+    int num = 0;
+    // int count_of_non_overlaps = 0;
+    while (paf_read(fp, &r) >= 0)
     {
-            if (aln[i]->read_A_id_ == aln[i]->read_B_id_)
+            // if (r.qe - r.qs == r.ql || r.te - r.ts == r.tl ||
+            //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||
+            //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
+            //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
+            //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
+            // {
+            num++;
+            Overlap *new_ovl = new Overlap();
+
+            new_ovl->read_A_match_start_ = r.qs;
+            new_ovl->read_B_match_start_ = r.ts;
+            new_ovl->read_A_match_end_ = r.qe;
+            new_ovl->read_B_match_end_ = r.te;
+            new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
+            new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
+            // } else{
+            //     count_of_non_overlaps++;
+            // }
+            if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
             {
-                idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
+                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
             }
             else
             {
-                idx_pileup[aln[i]->read_A_id_].push_back(aln[i]);
-                idx_pileup[aln[i]->read_B_id_].push_back(aln[i]);
+                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
+                idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
             }
     }
+    
+    fprintf(stdout, "INFO, length of alignments  %d()\n", num);
+
 }
 
 void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
