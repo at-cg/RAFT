@@ -87,7 +87,6 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
 
 void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::vector<std::vector<Overlap *>> idx_pileup)
 {
-
     int n_read = reads.size();
 
     std::ofstream cov(param.outputfilename + ".coverage.txt");
@@ -157,13 +156,16 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
             long_repeats << "read " << i << ", ";
             long_repeats << maxstart << "," << maxend << "," << maxlen << std::endl;
             count_long_repeat_reads++;
-            if (reads[i]->align.compare("forward") == 0)
+            if (!param.real_reads)
             {
-                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + maxstart << "\t" << reads[i]->start_pos + maxend << std::endl;
-            }
-            else if (reads[i]->align.compare("reverse") == 0)
-            {
-                long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - maxend << "\t" << reads[i]->end_pos - maxstart << std::endl;
+                if (reads[i]->align.compare("forward") == 0)
+                {
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + maxstart << "\t" << reads[i]->start_pos + maxend << std::endl;
+                }
+                else if (reads[i]->align.compare("reverse") == 0)
+                {
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - maxend << "\t" << reads[i]->end_pos - maxstart << std::endl;
+                }
             }
         }
     }
