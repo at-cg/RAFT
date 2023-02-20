@@ -227,7 +227,7 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
 
                             reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
 
-                            reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length + overlap_length2) << "\n";
+                            reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length2) << "\n";
                             read_num++;
                         }
                     }
@@ -396,10 +396,10 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                                 reads_final << ">read=" << read_num << "," << align << ",position="
                                             << start_pos + repeat_start - overlap_length << "-"
                                             << start_pos + repeat_end + overlap_length2
-                                            << ",length=" << repeat_end - repeat_start + overlap_length + overlap_length2
+                                            << ",length=" << repeat_end - repeat_start + overlap_length2
                                             << read_name.substr(read_name.find_last_of(',')) << "\n";
 
-                                reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length + overlap_length2) << "\n";
+                                reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length2) << "\n";
                                 read_num++;
                                 bed_preserved << chr << "\t" << start_pos + repeat_start - overlap_length
                                               << "\t" << start_pos + repeat_end + overlap_length2 << std::endl;
@@ -441,10 +441,10 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                                 reads_final << ">read=" << read_num << "," << align << ",position="
                                             << end_pos - repeat_end - overlap_length2 << "-"
                                             << end_pos - repeat_start + overlap_length
-                                            << ",length=" << repeat_end - repeat_start + overlap_length + overlap_length2
+                                            << ",length=" << repeat_end - repeat_start + overlap_length2
                                             << read_name.substr(read_name.find_last_of(',')) << "\n";
 
-                                reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length + overlap_length2) << "\n";
+                                reads_final << read_seq.substr(repeat_start - overlap_length, repeat_end - repeat_start + overlap_length2) << "\n";
                                 read_num++;
 
                                 bed_preserved << chr << "\t" << end_pos - repeat_end - overlap_length2
