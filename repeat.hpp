@@ -98,6 +98,9 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
     int high_cov = cov_est * param.cov_mul;
     int count_long_repeat_reads = 0;
 
+    long long total_coverage = 0;
+    int total_windows = 0;
+
     for (int i = 0; i < n_read; i++)
     {
         repeat_reg << "read " << i << ", ";
@@ -118,6 +121,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         int maxlen = 0, maxstart = 0, maxend = 0;
         for (int j = 0; j < coverage.size(); j++)
         {
+            total_coverage = total_coverage + coverage[j].second;
+            total_windows++;
             if (coverage[j].second >= high_cov)
             {
                 end = coverage[j].first + param.reso - 1;
@@ -169,6 +174,10 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
             }
         }
     }
+
+    double coverage_per_window = (double)total_coverage / total_windows;
+    fprintf(stdout, "coverage per window is %f \n", coverage_per_window);
+    fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window / cov_est);
 
     fprintf(stdout, "INFO, Number of reads with long repeats:  %d\n", count_long_repeat_reads);
 }
