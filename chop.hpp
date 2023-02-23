@@ -542,7 +542,7 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
             }
     }
 
-    fprintf(stdout, "fraction of eligible preserved reads \n%f", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
+    fprintf(stdout, "fraction of eligible preserved reads %f \n", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
 }
 
 void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
