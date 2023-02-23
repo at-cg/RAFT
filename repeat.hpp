@@ -91,15 +91,19 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
-
+ 
     int cov_est = param.est_cov;
     int high_cov = cov_est * param.cov_mul;
 
-    int total_coverage = 0;
+    long long total_coverage = 0;
     int total_windows = 0;
+    long long total_repeat_length =0;
+    long long total_read_length=0;
 
     for (int i = 0; i < n_read; i++)
     {
+
+        total_read_length = total_read_length + reads[i]->len;
         std::vector<std::pair<int, int>> coverage;
         profileCoverage(idx_pileup[i], coverage, param.reso, reads[i]);
 
@@ -124,6 +128,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
             {
                 if ((end - start) >= param.repeat_length)
                 {
+                    total_repeat_length = total_repeat_length + end - start;
+
                     if (abs(int(strlen(reads[i]->bases.c_str())) - end) <= param.overlap_length)
                     {
                         end = strlen(reads[i]->bases.c_str());
@@ -150,6 +156,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
         if ((end - start) >= param.repeat_length)
         {
+            total_repeat_length=total_repeat_length + end - start;
+
             if (abs(int(strlen(reads[i]->bases.c_str()) - end)) <= param.overlap_length)
             {
                 end = strlen(reads[i]->bases.c_str());
@@ -174,9 +182,11 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
     }
 
     double coverage_per_window = (double)total_coverage / total_windows;
+    double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
 
     fprintf(stdout, "coverage per window is %f \n", coverage_per_window);
-    fprintf(stdout, "coverage per window/coverage is %f \n", coverage_per_window/cov_est);
+    fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window/cov_est);
+    fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
 
     for (int i = 0; i < n_read; i++)
     {

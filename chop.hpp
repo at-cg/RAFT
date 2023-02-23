@@ -151,6 +151,9 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
     int uniform_read_length = param.uniform_read_length;
     int distance = uniform_read_length - overlap_length;
 
+    int count_of_eligible_preserved_reads=0;
+    int count_of_eligible_fragmented_reads=0;
+
     for (int i = 0; i < n_read; i++)
     {
 
@@ -158,8 +161,15 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
             std::string read_seq = reads[i]->bases;
             int read_length = reads[i]->len;
 
-            if (reads[i]->preserve)
+            if (read_length <= param.read_length_threshold)
             {
+                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
+                reads_final << read_seq << "\n";
+                read_num++;
+            }
+            else if (reads[i]->preserve)
+            {
+                count_of_eligible_preserved_reads++;
                 int non_repeat_start = 0;
                 int repeat_start = 0;
                 int repeat_end = 0;
@@ -242,14 +252,9 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
                     }
                 }
             }
-            else if (read_length <= param.read_length_threshold)
-            {
-                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
-                reads_final << read_seq << "\n";
-                read_num++;
-            }
             else
             {
+                count_of_eligible_fragmented_reads++;
                 int parts = read_length / distance;
                 int j;
 
@@ -273,6 +278,7 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
                 }
             }
     }
+    fprintf(stdout, "fraction of eligible preserved reads %f \n", double(count_of_eligible_preserved_reads) / (count_of_eligible_fragmented_reads + count_of_eligible_preserved_reads));
 }
 
 void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
@@ -285,6 +291,9 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
     int uniform_read_length = param.uniform_read_length;
     int distance = uniform_read_length - overlap_length;
 
+    int count_of_eligible_preserved_reads = 0;
+    int count_of_eligible_fragmented_reads = 0;
+
     for (int i = 0; i < n_read; i++)
     {
 
@@ -296,8 +305,15 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
             std::string align = reads[i]->align;
             std::string chr = reads[i]->chr;
 
-            if (reads[i]->preserve)
+            if (read_length <= param.read_length_threshold)
             {
+                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
+                reads_final << read_seq << "\n";
+                read_num++;
+            }
+            else if (reads[i]->preserve)
+            {
+                count_of_eligible_preserved_reads++;
                 int non_repeat_start = 0;
                 int repeat_start = 0;
                 int repeat_end = 0;
@@ -463,14 +479,9 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                     }
                 }
             }
-            else if (read_length <= param.read_length_threshold)
-            {
-                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
-                reads_final << read_seq << "\n";
-                read_num++;
-            }
             else
             {
+                count_of_eligible_fragmented_reads++;
                 int parts = read_length / distance;
                 int j;
 
@@ -530,6 +541,8 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                 bed_fragmented << chr << "\t" << start_pos << "\t" << end_pos << std::endl;
             }
     }
+
+    fprintf(stdout, "fraction of eligible preserved reads \n%f", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
 }
 
 void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
