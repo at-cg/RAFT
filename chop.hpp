@@ -101,7 +101,7 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &para
     return num;
 }
 
-void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup)
+void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, const algoParams &param)
 {
     paf_file_t *fp;
     paf_rec_t r;
@@ -128,14 +128,21 @@ void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> 
             // } else{
             //     count_of_non_overlaps++;
             // }
-            if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
+            if (param.hifiasm_overlaps)
             {
                 idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
             }
             else
             {
-                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-                idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
+                if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
+                {
+                    idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
+                }
+                else
+                {
+                    idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
+                    idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
+                }
             }
     }
     
@@ -542,7 +549,7 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
             }
     }
 
-    fprintf(stdout, "fraction of eligible preserved reads \n%f", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
+    fprintf(stdout, "fraction of eligible preserved reads %f \n", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
 }
 
 void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
@@ -561,7 +568,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, const a
             idx_pileup.push_back(std::vector<Overlap *>());
     }
 
-    create_pileup(paffilename, idx_pileup);
+    create_pileup(paffilename, idx_pileup, param);
 
     repeat_annotate(reads, param, idx_pileup);
 

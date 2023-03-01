@@ -1,7 +1,7 @@
 #ifndef PARAM_CHOPPER_H
 #define PARAM_CHOPPER_H
 
-struct algoParams
+    struct algoParams
 {
     int reso;
     int est_cov;
@@ -12,6 +12,7 @@ struct algoParams
     int read_length_threshold;
     std::string outputfilename;
     int real_reads;
+    int hifiasm_overlaps;
 
     void initParams()
     {
@@ -23,7 +24,8 @@ struct algoParams
         uniform_read_length = overlap_length * 2;
         read_length_threshold = 20000;
         outputfilename = "chopper";
-        real_reads=0;
+        real_reads = 0;
+        hifiasm_overlaps = 0;
     }
 
     void printParams()
@@ -36,6 +38,7 @@ struct algoParams
         std::cout << "INFO, printParams(), uniform_read_length = " << uniform_read_length << "\n";
         std::cout << "INFO, printParams(), read_length_threshold = " << read_length_threshold << "\n";
         std::cout << "INFO, printParams(), real_reads = " << real_reads << "\n";
+        std::cout << "INFO, printParams(), hifiasm_overlaps = " << hifiasm_overlaps << "\n";
     }
 };
 
