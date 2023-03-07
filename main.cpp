@@ -11,9 +11,8 @@ void printHelp(const algoParams &params)
     std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
     std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
     std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
-    std::cout << "  -v NUM     overlap_length " << params.overlap_length << "\n";
-    std::cout << "  -u NUM     uniform_read_length " << params.uniform_read_length << "\n";
-    std::cout << "  -t NUM     read_length_threshold " << params.read_length_threshold << "\n";
+    std::cout << "  -v NUM     interval_length " << params.interval_length << "\n";
+    std::cout << "  -u NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     std::cout << "  -d NUM    real reads " << params.real_reads << "\n";
     std::cout << "  -p NUM     hifiasm overlaps " << params.hifiasm_overlaps << "\n";
@@ -27,7 +26,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:v:u:t:o:d:p:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:i:f:o:d:p:")) != -1)
     {
         switch (option)
         {
@@ -43,14 +42,11 @@ int main(int argc, char *argv[])
         case 'l':
             params.repeat_length = atoi(optarg);
             break;
-        case 'v':
-            params.overlap_length = atoi(optarg);
+        case 'i':
+            params.interval_length = atoi(optarg);
             break;
-        case 'u':
-            params.uniform_read_length = atoi(optarg);
-            break;
-        case 't':
-            params.read_length_threshold = atoi(optarg);
+        case 'f':
+            params.flanking_length = atoi(optarg);
             break;
         case 'o':
             params.outputfilename = optarg;

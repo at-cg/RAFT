@@ -7,9 +7,8 @@
     int est_cov;
     double cov_mul;
     int repeat_length;
-    int overlap_length;
-    int uniform_read_length;
-    int read_length_threshold;
+    int interval_length;
+    int flanking_length;
     std::string outputfilename;
     int real_reads;
     int hifiasm_overlaps;
@@ -19,10 +18,9 @@
         reso = 50;
         est_cov = 0;
         cov_mul = 1.5;
-        repeat_length = 10000;
-        overlap_length = 10000;
-        uniform_read_length = overlap_length * 2;
-        read_length_threshold = 20000;
+        repeat_length = 1000;
+        interval_length = 10000;
+        flanking_length = 2000;
         outputfilename = "chopper";
         real_reads = 0;
         hifiasm_overlaps = 0;
@@ -34,9 +32,8 @@
         std::cout << "INFO, printParams(), est_cov = " << est_cov << "\n";
         std::cout << "INFO, printParams(), cov_mul = " << cov_mul << "\n";
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
-        std::cout << "INFO, printParams(), overlap_length = " << overlap_length << "\n";
-        std::cout << "INFO, printParams(), uniform_read_length = " << uniform_read_length << "\n";
-        std::cout << "INFO, printParams(), read_length_threshold = " << read_length_threshold << "\n";
+        std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
+        std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";
         std::cout << "INFO, printParams(), real_reads = " << real_reads << "\n";
         std::cout << "INFO, printParams(), hifiasm_overlaps = " << hifiasm_overlaps << "\n";
     }

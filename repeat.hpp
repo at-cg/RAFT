@@ -55,11 +55,11 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
     {
         if (alignments[i]->read_A_id_ == read->id)
         {
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ - 1, alignments[i]->read_A_match_end_ - 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1));
         }
         else if (alignments[i]->read_B_id_ == read->id)
         {
-            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ - 1,  alignments[i]->read_B_match_end_ - 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ ,  alignments[i]->read_B_match_end_ - 1));
         }
     }
 
@@ -102,7 +102,6 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
     for (int i = 0; i < n_read; i++)
     {
-
         total_read_length = total_read_length + reads[i]->len;
         std::vector<std::pair<int, int>> coverage;
         profileCoverage(idx_pileup[i], coverage, param.reso, reads[i]);
@@ -115,6 +114,7 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         // get the longest consecutive region that has high coverage, high coverage = estimated coverage * 1.5
         int start = 0;
         int end = start;
+        int s, e = 0;
         for (int j = 0; j < coverage.size(); j++)
         {
             total_coverage = total_coverage + coverage[j].second;
@@ -122,7 +122,7 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
             if (coverage[j].second >= high_cov)
             {
-                end = coverage[j].first + param.reso - 1;
+                end = coverage[j].first + param.reso;
             }
             else
             {
@@ -130,25 +130,30 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
                 {
                     total_repeat_length = total_repeat_length + end - start;
 
-                    if (abs(int(strlen(reads[i]->bases.c_str())) - end) <= param.overlap_length)
+                    s = start - param.flanking_length;
+                    e = end + param.flanking_length;
+
+                    if (s <= 0)
                     {
-                        end = strlen(reads[i]->bases.c_str());
+                        s = 0;
                     }
-                    if(start <= param.overlap_length){
-                        start = 0;
+
+                    if ( e >= reads[i]->len)
+                    {
+                        e = reads[i]->len;
                     }
-                    if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.overlap_length)
+
+                    if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
                     {
 
-                        std::get<1>(reads[i]->long_repeats.back()) = end;
-                        std::get<2>(reads[i]->long_repeats.back()) = end - std::get<0>(reads[i]->long_repeats.back());
+                        reads[i]->long_repeats.back().second = e;
                     }
                     else
                     {
-                        reads[i]->long_repeats.push_back(std::tuple<int, int, int>(start, end, end - start));
+                        reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
                     }
-                    reads[i]->preserve = 1;
                 }
+
                 start = coverage[j + 1].first;
                 end = start;
             }
@@ -158,26 +163,28 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         {
             total_repeat_length=total_repeat_length + end - start;
 
-            if (abs(int(strlen(reads[i]->bases.c_str()) - end)) <= param.overlap_length)
+            s = start - param.flanking_length;
+            e = end + param.flanking_length;
+
+            if (s <= 0)
             {
-                end = strlen(reads[i]->bases.c_str());
-            }
-            if (start <= param.overlap_length)
-            {
-                start = 0;
+                s = 0;
             }
 
-            if (reads[i]->long_repeats.size() && (start - std::get<1>(reads[i]->long_repeats.back())) <= param.overlap_length)
+            if (e >= reads[i]->len)
             {
-                std::get<1>(reads[i]->long_repeats.back()) = end;
-                std::get<2>(reads[i]->long_repeats.back()) = end - std::get<0>(reads[i]->long_repeats.back());
+                e = reads[i]->len;
+            }
+
+            if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
+            {
+
+                reads[i]->long_repeats.back().second = e;
             }
             else
             {
-                reads[i]->long_repeats.push_back(std::tuple<int, int, int>(start, end, end - start));
+                reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
             }
-
-            reads[i]->preserve = 1;
         }
     }
 
@@ -193,8 +200,7 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         long_repeats << "read " << i << ", ";
         for (int j = 0; j < reads[i]->long_repeats.size(); j++)
         {
-            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j])
-                         << "," << std::get<2>(reads[i]->long_repeats[j]) << "    ";
+            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j]) << "    ";
             
             if(!param.real_reads){
                 if (reads[i]->align.compare("forward") == 0)
