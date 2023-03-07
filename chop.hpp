@@ -195,7 +195,7 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
                 int parts = read_length / distance;
                 int j;
 
-                for (j = 0; j < parts - 1; j++)
+                for (j = 0; j < parts - 2; j++)
                 {
 
                     reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
@@ -203,14 +203,12 @@ void break_real_reads(const algoParams &param, int n_read, std::vector<Read *> &
                     read_num++;
                 }
 
-                int last_length = read_length - ((parts - 1) * distance);
+                int last_length = read_length - ((parts - 2) * distance);
 
-                if (last_length > overlap_length)
-                {
-                    reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
-                    reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
-                    read_num++;
-                }
+                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
+                reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
+                read_num++;
+                
             }
     }
     fprintf(stdout, "fraction of eligible preserved reads %f \n", double(count_of_eligible_preserved_reads) / (count_of_eligible_fragmented_reads + count_of_eligible_preserved_reads));
@@ -263,7 +261,7 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                 if (align.compare("forward") == 0)
                 {
 
-                    for (j = 0; j < parts - 1; j++)
+                    for (j = 0; j < parts - 2; j++)
                     {
 
                         reads_final << ">read=" << read_num << "," << align << ",position="
@@ -274,21 +272,19 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                         read_num++;
                     }
 
-                    int last_length = read_length - ((parts - 1) * distance);
+                    int last_length = read_length - ((parts - 2) * distance);
 
-                    if (last_length > overlap_length)
-                    {
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + j * distance << "-" << start_pos + j * distance + last_length
-                                    << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << start_pos + j * distance << "-" << start_pos + j * distance + last_length
+                                << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
-                        reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
-                        read_num++;
-                    }
+                    reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
+                    read_num++;
+                    
                 }
                 else if (align.compare("reverse") == 0)
                 {
-                    for (j = 0; j < parts - 1; j++)
+                    for (j = 0; j < parts - 2; j++)
                     {
 
                         reads_final << ">read=" << read_num << "," << align << ",position="
@@ -299,18 +295,15 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
                         read_num++;
                     }
 
-                    int last_length = read_length - ((parts - 1) * distance);
+                    int last_length = read_length - ((parts - 2) * distance);
 
-                    if (last_length > overlap_length)
-                    {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << end_pos - j * distance - last_length << "-" << end_pos - j * distance
+                                << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
 
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - j * distance - last_length << "-" << end_pos - j * distance
-                                    << ",length=" << last_length << read_name.substr(read_name.find_last_of(',')) << "\n";
-
-                        reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
-                        read_num++;
-                    }
+                    reads_final << read_seq.substr(0 + j * distance, last_length) << "\n";
+                    read_num++;
+                    
                 }
 
                 bed_fragmented << chr << "\t" << start_pos << "\t" << end_pos << std::endl;
