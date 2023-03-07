@@ -200,18 +200,18 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
         long_repeats << "read " << i << ", ";
         for (int j = 0; j < reads[i]->long_repeats.size(); j++)
         {
-            long_repeats << std::get<0>(reads[i]->long_repeats[j]) << "," << std::get<1>(reads[i]->long_repeats[j]) << "    ";
+            long_repeats << reads[i]->long_repeats[j].first << "," << reads[i]->long_repeats[j].second << "    ";
             
             if(!param.real_reads){
                 if (reads[i]->align.compare("forward") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + std::get<0>(reads[i]->long_repeats[j])
-                                    << "\t" << reads[i]->start_pos + std::get<1>(reads[i]->long_repeats[j]) << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].first
+                                    << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].second << std::endl;
                 }
                 else if (reads[i]->align.compare("reverse") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - std::get<1>(reads[i]->long_repeats[j])
-                                    << "\t" << reads[i]->end_pos - std::get<0>(reads[i]->long_repeats[j]) << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].second
+                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].first << std::endl;
                 }
             }
         }
