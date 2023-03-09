@@ -1,5 +1,6 @@
 #include "repeat.hpp"
 #include <unistd.h>
+#include <regex>
 
 #ifndef COMPARE_READ
 #define COMPARE_READ
@@ -68,7 +69,7 @@ std::string get_chr_from_string(const char *name_str)
 }
 
 // parse + save all reads
-int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &param)
+int loadFASTA(const char *fn, std::vector<Read *> &reads, struct algoParams &param)
 {
     gzFile fp;
     kseq_t *seq;
@@ -78,7 +79,15 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &para
     int num = 0;
  
     while ((l = kseq_read(seq)) >= 0)
-    {       
+    {
+            if (num == 0)
+            {
+                if (std::regex_match(seq->name.s, std::regex("^read=[0-9]+,[a-z]+,position=[0-9]+-[0-9]+,length=[0-9]+,(.*)")))
+                {
+                    param.real_reads = 0;
+                }
+                fprintf(stdout, "Real Reads %d \n", param.real_reads);
+            }
             if(param.real_reads){
                 Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
                                        std::string(seq->seq.s));
@@ -101,7 +110,7 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, const algoParams &para
     return num;
 }
 
-void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, const algoParams &param)
+void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, struct algoParams &param)
 {
     paf_file_t *fp;
     paf_rec_t r;
@@ -128,7 +137,7 @@ void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> 
             // } else{
             //     count_of_non_overlaps++;
             // }
-            if (param.hifiasm_overlaps)
+            if (param.symmetric_overlaps)
             {
                 idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
             }
@@ -540,7 +549,7 @@ void break_simulated_reads(const algoParams &param, int n_read, std::vector<Read
     fprintf(stdout, "fraction of eligible preserved reads %f \n", double(count_of_eligible_preserved_reads)/(count_of_eligible_fragmented_reads+count_of_eligible_preserved_reads));
 }
 
-void break_long_reads(const char *readfilename, const char *paffilename, const algoParams &param)
+void break_long_reads(const char *readfilename, const char *paffilename, struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");

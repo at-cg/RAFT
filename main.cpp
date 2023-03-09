@@ -15,8 +15,7 @@ void printHelp(const algoParams &params)
     std::cout << "  -u NUM     uniform_read_length " << params.uniform_read_length << "\n";
     std::cout << "  -t NUM     read_length_threshold " << params.read_length_threshold << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
-    std::cout << "  -d NUM    real reads " << params.real_reads << "\n";
-    std::cout << "  -p NUM     hifiasm overlaps " << params.hifiasm_overlaps << "\n";
+    std::cout << "  -p FILE    symmetric overlaps " << params.symmetric_overlaps << "\n";
     exit(1);
 }
 
@@ -27,7 +26,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:v:u:t:o:d:p:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:v:u:t:o:p:")) != -1)
     {
         switch (option)
         {
@@ -55,11 +54,8 @@ int main(int argc, char *argv[])
         case 'o':
             params.outputfilename = optarg;
             break;
-        case 'd':
-            params.real_reads = atoi(optarg);
-            break;
         case 'p':
-            params.hifiasm_overlaps = atoi(optarg);
+            params.symmetric_overlaps = atoi(optarg);
             break;
         default:
             printHelp(params);
