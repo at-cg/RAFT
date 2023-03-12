@@ -256,7 +256,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                             << ",length=" << read_length
                             << read_name.substr(read_name.find_last_of(',')) << "\n";
             }else{
-                reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
+                reads_final << ">read=" << read_num << ", " << read_name << "\n";
             }
 
                 reads_final << read_seq << "\n";
@@ -285,7 +285,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                 }else{
-                    reads_final << ">read=" << read_num << read_name.substr(read_name.find(',')) << "\n";
+                    reads_final << ">read=" << read_num << ", " << read_name << "\n";
                 }
                     reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
                     read_num++;
