@@ -14,8 +14,7 @@ void printHelp(const algoParams &params)
     std::cout << "  -v NUM     interval_length " << params.interval_length << "\n";
     std::cout << "  -u NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
-    std::cout << "  -p FILE    symmetric overlaps " << params.symmetric_overlaps << "\n";
-    exit(1);
+     exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -25,7 +24,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:i:f:o:p:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:i:f:o:")) != -1)
     {
         switch (option)
         {
@@ -49,9 +48,6 @@ int main(int argc, char *argv[])
             break;
         case 'o':
             params.outputfilename = optarg;
-            break;
-        case 'p':
-            params.symmetric_overlaps = atoi(optarg);
             break;
         default:
             printHelp(params);

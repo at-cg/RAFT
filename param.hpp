@@ -34,7 +34,6 @@
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
         std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
         std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";
-        std::cout << "INFO, printParams(), symmetric_overlaps = " << symmetric_overlaps << "\n";
     }
 };
 

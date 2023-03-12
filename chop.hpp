@@ -1,6 +1,7 @@
 #include "repeat.hpp"
 #include <unistd.h>
 #include <regex>
+#include <unordered_map>
 
 #ifndef COMPARE_READ
 #define COMPARE_READ
@@ -68,8 +69,23 @@ std::string get_chr_from_string(const char *name_str)
     return std::string(substr);
 }
 
+// save fastq read identifier into hash table, and give it an integer id
+int addStringToMap(const std::string &str, std::unordered_map<std::string, int> &umap)
+{
+    if (umap.find(str) != umap.end())
+    {
+        return umap[str];
+    }
+    else
+    {
+        int key = (int)umap.size();
+        umap[str] = key;
+        return key;
+    }
+}
+
 // parse + save all reads
-int loadFASTA(const char *fn, std::vector<Read *> &reads, struct algoParams &param)
+int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std::string, int> &umap, struct algoParams &param)
 {
     gzFile fp;
     kseq_t *seq;
@@ -86,9 +102,11 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, struct algoParams &par
                 {
                     param.real_reads=0;                
                 }
+                fprintf(stdout, "Real Reads %d \n", param.real_reads);
             }
             if(param.real_reads){
-                Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
+                int read_id = addStringToMap(std::string(seq->name.s), umap);
+                Read *new_r = new Read(read_id, strlen(seq->seq.s), std::string(seq->name.s),
                                        std::string(seq->seq.s));
                 reads.push_back(new_r);
             }else{
@@ -109,12 +127,17 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, struct algoParams &par
     return num;
 }
 
-void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, struct algoParams &param)
+void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, 
+    std::unordered_map<std::string, int> &umap, struct algoParams &param)
 {
     paf_file_t *fp;
     paf_rec_t r;
     fp = paf_open(paffilename);
     int num = 0;
+    int check_sym_ovlp = 1;
+
+    Overlap *first_ovl = new Overlap();
+
     // int count_of_non_overlaps = 0;
     while (paf_read(fp, &r) >= 0)
     {
@@ -123,37 +146,53 @@ void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> 
             //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
             //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
             //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
-            // {
-            num++;
+
             Overlap *new_ovl = new Overlap();
 
             new_ovl->read_A_match_start_ = r.qs;
             new_ovl->read_B_match_start_ = r.ts;
             new_ovl->read_A_match_end_ = r.qe;
             new_ovl->read_B_match_end_ = r.te;
-            new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
-            new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
+            if(param.real_reads){
+                new_ovl->read_A_id_ = addStringToMap(std::string(r.qn), umap);
+                new_ovl->read_B_id_ = addStringToMap(std::string(r.tn), umap);
+            }else{
+                new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
+                new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
+            }
             // } else{
             //     count_of_non_overlaps++;
             // }
-            if (param.symmetric_overlaps)
+
+            if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
             {
                 idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
             }
             else
             {
-                if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
-                {
-                    idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-                }
-                else
-                {
-                    idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-                    idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
-                }
+                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
+                idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
             }
+
+            if (num == 0)
+            {
+                first_ovl =  new_ovl;
+            }
+            else if (check_sym_ovlp && first_ovl->read_A_id_ == new_ovl->read_B_id_ &&
+                     first_ovl->read_B_id_ == new_ovl->read_A_id_ &&
+                     first_ovl->read_A_match_start_ == new_ovl->read_B_match_start_ &&
+                     first_ovl->read_A_match_end_ == new_ovl->read_B_match_end_ &&
+                     first_ovl->read_B_match_start_ == new_ovl->read_A_match_start_ &&
+                     first_ovl->read_B_match_end_ == new_ovl->read_A_match_end_)
+            {
+                param.symmetric_overlaps=1;
+                check_sym_ovlp=0;
+            }
+
+            num++;
     }
-    
+
+    fprintf(stdout, "Symmetric overlaps %d \n", param.symmetric_overlaps);
     fprintf(stdout, "INFO, length of alignments  %d()\n", num);
 
 }
@@ -255,6 +294,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
     }
 }
 
+
 void break_long_reads(const char *readfilename, const char *paffilename, struct algoParams &param)
 {
 
@@ -263,7 +303,10 @@ void break_long_reads(const char *readfilename, const char *paffilename, struct 
     int n_read;
     std::vector<Read *> reads;
 
-    n_read = loadFASTA(readfilename, reads, param);
+    // hash: read id -> number
+    std::unordered_map<std::string, int> umap; // size = count of reads
+
+    n_read = loadFASTA(readfilename, reads, umap, param);
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
 
     for (int i = 0; i < n_read; i++)
@@ -271,9 +314,9 @@ void break_long_reads(const char *readfilename, const char *paffilename, struct 
         idx_pileup.push_back(std::vector<Overlap *>());
     }
 
-    create_pileup(paffilename, idx_pileup, param);
+    create_pileup(paffilename, idx_pileup, umap, param);
 
-    repeat_annotate(reads, param, idx_pileup);
+    repeat_annotate(reads, idx_pileup, param);
 
     break_reads(param, n_read, reads, reads_final);
 }
