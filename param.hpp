@@ -37,7 +37,6 @@
         std::cout << "INFO, printParams(), overlap_length = " << overlap_length << "\n";
         std::cout << "INFO, printParams(), uniform_read_length = " << uniform_read_length << "\n";
         std::cout << "INFO, printParams(), read_length_threshold = " << read_length_threshold << "\n";
-        std::cout << "INFO, printParams(), symmetric_overlaps = " << symmetric_overlaps << "\n";
     }
 };
 

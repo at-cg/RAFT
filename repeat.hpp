@@ -33,9 +33,10 @@ bool pairDescend(int &firstElem, int &secondElem)
 }
 #endif
 
-void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, int reso, Read *read)
+void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, Read *read,
+                     const algoParams &param)
 {
-
+    int reso = param.reso;
     int intervals = read->len / reso;
 
     if (intervals % reso)
@@ -57,7 +58,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
         {
             events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1));
         }
-        else if (alignments[i]->read_B_id_ == read->id)
+        else if (!param.symmetric_overlaps && alignments[i]->read_B_id_ == read->id)
         {
             events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ ,  alignments[i]->read_B_match_end_ - 1));
         }
@@ -84,7 +85,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
     return;
 }
 
-void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::vector<std::vector<Overlap *>> idx_pileup)
+void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap *>> idx_pileup, const algoParams &param)
 {
 
     int n_read = reads.size();
@@ -105,8 +106,8 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
         total_read_length = total_read_length + reads[i]->len;
         std::vector<std::pair<int, int>> coverage;
-        profileCoverage(idx_pileup[i], coverage, param.reso, reads[i]);
-
+        profileCoverage(idx_pileup[i], coverage, reads[i], param);
+        
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)
             cov << coverage[j].first << "," << coverage[j].second << " ";
@@ -209,5 +210,4 @@ void repeat_annotate(std::vector<Read *> reads, const algoParams &param, std::ve
 
         long_repeats << std::endl;
     }
-
 }
