@@ -4,3 +4,4 @@
 *.bed
 chopper*
 .vscode/
+.DS_Store

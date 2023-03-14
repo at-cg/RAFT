@@ -127,74 +127,62 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     return num;
 }
 
-void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, 
-    std::unordered_map<std::string, int> &umap, struct algoParams &param)
+uint64_t encodeKmer(const std::string &str)
 {
-    paf_file_t *fp;
-    paf_rec_t r;
-    fp = paf_open(paffilename);
-    int num = 0;
-    int check_sym_ovlp = 1;
+    uint64_t kmer[2] = {0, 0};
+    int k = str.length();
+    uint64_t shift1 = 2 * (k - 1);
 
-    Overlap *first_ovl = new Overlap();
-
-    // int count_of_non_overlaps = 0;
-    while (paf_read(fp, &r) >= 0)
+    for (int i = 0; i < k; ++i)
     {
-            // if (r.qe - r.qs == r.ql || r.te - r.ts == r.tl ||
-            //     (r.rev == 0 && r.qs > 0 && r.qe == r.ql && r.ts == 0 && r.te < r.tl) ||
-            //     (r.rev == 0 && r.qs == 0 && r.qe < r.ql && r.ts > 0 && r.te == r.tl) ||
-            //     (r.rev == 1 && r.qs == 0 && r.qe < r.ql && r.ts == 0 && r.te < r.tl) ||
-            //     (r.rev == 1 && r.qs > 0 && r.qe == r.ql && r.ts > 0 && r.te == r.tl))
-
-            Overlap *new_ovl = new Overlap();
-
-            new_ovl->read_A_match_start_ = r.qs;
-            new_ovl->read_B_match_start_ = r.ts;
-            new_ovl->read_A_match_end_ = r.qe;
-            new_ovl->read_B_match_end_ = r.te;
-            if(param.real_reads){
-                new_ovl->read_A_id_ = addStringToMap(std::string(r.qn), umap);
-                new_ovl->read_B_id_ = addStringToMap(std::string(r.tn), umap);
-            }else{
-                new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
-                new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
-            }
-            // } else{
-            //     count_of_non_overlaps++;
-            // }
-
-            if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
-            {
-                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-            }
-            else
-            {
-                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-                idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
-            }
-
-            if (num == 0)
-            {
-                first_ovl =  new_ovl;
-            }
-            else if (check_sym_ovlp && first_ovl->read_A_id_ == new_ovl->read_B_id_ &&
-                     first_ovl->read_B_id_ == new_ovl->read_A_id_ &&
-                     first_ovl->read_A_match_start_ == new_ovl->read_B_match_start_ &&
-                     first_ovl->read_A_match_end_ == new_ovl->read_B_match_end_ &&
-                     first_ovl->read_B_match_start_ == new_ovl->read_A_match_start_ &&
-                     first_ovl->read_B_match_end_ == new_ovl->read_A_match_end_)
-            {
-                param.symmetric_overlaps=1;
-                check_sym_ovlp=0;
-            }
-
-            num++;
+            int c = seq_nt4_table[(uint8_t)str[i]];
+            kmer[0] = kmer[0] << 2 | c;
+            kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1;
     }
 
-    fprintf(stdout, "Symmetric overlaps %d \n", param.symmetric_overlaps);
-    fprintf(stdout, "INFO, length of alignments  %d()\n", num);
+    return kmer[0] < kmer[1] ? kmer[0] : kmer[1];
+}
 
+bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParams &param)
+{
+
+    std::ifstream idt(kmer_freq_filename);
+
+    std::string kmer;
+    int num = 0;
+    int freq;
+    while (idt >> kmer >> freq)
+            num++;
+
+    // kmer length used for kmer counting and mapping must be consistent
+    if (num > 0)
+    {
+            if (kmer.length() != param.kmer_length)
+            {
+                fprintf(stderr, "ERROR: input list of k-mers and parameter k are inconsistent\n");
+                abort();
+            }
+    }
+
+    // set up bloom filter
+    bloom_parameters parameters;
+    parameters.false_positive_probability = 0.001;
+    parameters.projected_element_count = std::max(num, 1000);
+    parameters.compute_optimal_parameters();
+
+    bloom_filter *kmer_filter = new bloom_filter(parameters);
+
+    // read the file again
+    idt.clear();
+    idt.seekg(0);
+    while (idt >> kmer >> freq)
+    {
+        kmer_filter->insert(encodeKmer(kmer));
+    }
+
+    fprintf(stdout, "Number of high freq k-mers %d \n", num);
+
+    return kmer_filter;
 }
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
@@ -294,8 +282,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
     }
 }
 
-
-void break_long_reads(const char *readfilename, const char *paffilename, struct algoParams &param)
+void break_long_reads(const char *readfilename, const char *kmer_freq_filename, struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");
@@ -307,16 +294,10 @@ void break_long_reads(const char *readfilename, const char *paffilename, struct 
     std::unordered_map<std::string, int> umap; // size = count of reads
 
     n_read = loadFASTA(readfilename, reads, umap, param);
-    std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
 
-    for (int i = 0; i < n_read; i++)
-    {
-        idx_pileup.push_back(std::vector<Overlap *>());
-    }
+    bloom_filter* kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
 
-    create_pileup(paffilename, idx_pileup, umap, param);
-
-    repeat_annotate(reads, idx_pileup, param);
+    repeat_annotate(reads, kmer_filter, param);
 
     break_reads(param, n_read, reads, reads_final);
 }

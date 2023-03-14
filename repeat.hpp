@@ -4,42 +4,39 @@
 #include <algorithm>
 #include <fstream>
 
-#include "paf.hpp"
 #include "read.hpp"
-#include "overlap.hpp"
 #include "param.hpp"
+#include "bloom_filter.hpp"
 
-#ifndef COMPARE_EVENT
-#define COMPARE_EVENT
-bool compare_event(std::pair<int, int> event1, std::pair<int, int> event2)
-{
-    return event1.first < event2.first;
-}
+#ifndef ATCG
+#define ATCG
+unsigned char seq_nt4_table[256] = {
+    0, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
+
 #endif
 
-#ifndef PAIR_ASCEND
-#define PAIR_ASCEND
-bool pairAscend(int &firstElem, int &secondElem)
-{
-    return firstElem < secondElem;
-}
-#endif
-
-#ifndef PAIR_DESCEND
-#define PAIR_DESCEND
-bool pairDescend(int &firstElem, int &secondElem)
-{
-    return firstElem > secondElem;
-}
-#endif
-
-void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, Read *read,
-    const algoParams &param)
+void profileCoverage(bloom_filter *kmer_filter, std::vector<std::pair<int, float>> &coverage, Read *read,
+                     const algoParams &param)
 {
     int reso = param.reso;
     int intervals = read->len / reso;
 
-    if (intervals % reso)
+    if (read->len % reso)
     {
         intervals++;
     }
@@ -50,62 +47,54 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<i
         coverage[i].first = i * reso;
     }
 
-    // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
-    std::vector<std::pair<int, int>> events;
-    for (int i = 0; i < alignments.size(); i++)
-    {
-        if (alignments[i]->read_A_id_ == read->id)
-        {
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1));
-        }
-        else if (!param.symmetric_overlaps && alignments[i]->read_B_id_ == read->id)
-        {
-            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_ ,  alignments[i]->read_B_match_end_ - 1));
-        }
-    }
+    int j=0, z=0;
+    int k = param.kmer_length;
+    int candidiate_kmers, high_freq_kmers = 0;
+    uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1, kmer[2] = {0, 0};
 
-    std::sort(events.begin(), events.end(), compare_event);
-
-    int pos = 0;
-    int i = 0;
-    while (pos < events.size())
+    for (int i = 0; i < read->len; ++i)
     {
-        while ((events[pos].first < (i + 1) * reso) and (pos < events.size()))
+        int c = seq_nt4_table[(uint8_t)read->bases[i]];
+        if (i >= ((j + 1) * reso)){
+            coverage[j].second = (float)high_freq_kmers/candidiate_kmers;
+            j++;
+            high_freq_kmers=0;
+            candidiate_kmers=0;
+        }
+        kmer[0] = (kmer[0] << 2 | c) & mask;         // forward k-mer
+        kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1; // reverse k-mer
+        z = kmer[0] < kmer[1] ? 0 : 1; // strand
+        if (i >= k)
         {
-            int k = i;
-            while (events[pos].second >= k * reso)
+            candidiate_kmers++;
+             if (kmer_filter->contains(kmer[z]))
             {
-                coverage[k].second++;
-                k++;
+                high_freq_kmers++;
             }
-            pos++;
         }
-        i++;
     }
+
+    coverage[j].second = (float)high_freq_kmers / candidiate_kmers;
+
     return;
 }
 
-void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap *>> idx_pileup, const algoParams &param)
+void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const algoParams &param)
 {
 
     int n_read = reads.size();
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
- 
-    int cov_est = param.est_cov;
-    int high_cov = cov_est * param.cov_mul;
 
-    long long total_coverage = 0;
-    int total_windows = 0;
-    long long total_repeat_length =0;
-    long long total_read_length=0;
+    uint64_t total_repeat_length = 0;
+    uint64_t total_read_length = 0;
 
     for (int i = 0; i < n_read; i++)
     {
         total_read_length = total_read_length + reads[i]->len;
-        std::vector<std::pair<int, int>> coverage;
-        profileCoverage(idx_pileup[i], coverage, reads[i], param);
+        std::vector<std::pair<int, float>> coverage;
+        profileCoverage(kmer_filter, coverage, reads[i], param);
 
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)
@@ -118,10 +107,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
         int s, e = 0;
         for (int j = 0; j < coverage.size(); j++)
         {
-            total_coverage = total_coverage + coverage[j].second;
-            total_windows++;
-
-            if (coverage[j].second >= high_cov)
+            if (coverage[j].second >= param.kmer_frac)
             {
                 end = coverage[j].first + param.reso;
             }
@@ -189,11 +175,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
         }
     }
 
-    double coverage_per_window = (double)total_coverage / total_windows;
-    double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
+    float fraction_of_repeat_length = (float)total_repeat_length / total_read_length;
 
-    fprintf(stdout, "coverage per window is %f \n", coverage_per_window);
-    fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window/cov_est);
     fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
 
     for (int i = 0; i < n_read; i++)
@@ -219,5 +202,5 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
 
         long_repeats << std::endl;
     }
-
 }
+

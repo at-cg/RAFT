@@ -8,13 +8,13 @@ void printHelp(const algoParams &params)
 {
     std::cout << "Usage: chopper [options] <input-reads.fa> <in.paf>\n";
     std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
-    std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
-    std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
+    std::cout << "  -k NUM     kmer length " << params.kmer_length << "\n";
+    std::cout << "  -p NUM     kmer frac " << params.kmer_frac << "\n";
     std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
     std::cout << "  -v NUM     interval_length " << params.interval_length << "\n";
     std::cout << "  -u NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
-     exit(1);
+    exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -24,18 +24,18 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:i:f:o:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:m:l:i:f:o:")) != -1)
     {
         switch (option)
         {
         case 'r':
             params.reso = atoi(optarg);
             break;
-        case 'e':
-            params.est_cov = atoi(optarg);
+        case 'k':
+            params.kmer_length = atoi(optarg);
             break;
-        case 'm':
-            params.cov_mul = std::stod(optarg);
+        case 'p':
+            params.kmer_frac = atof(optarg);
             break;
         case 'l':
             params.repeat_length = atoi(optarg);

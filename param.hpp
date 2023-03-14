@@ -4,8 +4,8 @@
     struct algoParams
 {
     int reso;
-    int est_cov;
-    double cov_mul;
+    int kmer_length;
+    float kmer_frac;
     int repeat_length;
     int interval_length;
     int flanking_length;
@@ -15,9 +15,9 @@
 
     void initParams()
     {
-        reso = 50;
-        est_cov = 0;
-        cov_mul = 1.5;
+        reso = 500;
+        kmer_length = 21;
+        kmer_frac=0.7;
         repeat_length = 10000;
         interval_length = 10000;
         flanking_length = 2000;
@@ -29,8 +29,8 @@
     void printParams()
     {
         std::cout << "INFO, printParams(), reso = " << reso << "\n";
-        std::cout << "INFO, printParams(), est_cov = " << est_cov << "\n";
-        std::cout << "INFO, printParams(), cov_mul = " << cov_mul << "\n";
+        std::cout << "INFO, printParams(), kmer_length = " << kmer_length << "\n";
+        std::cout << "INFO, printParams(), kmer_frac = " << kmer_frac << "\n";
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
         std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
         std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";

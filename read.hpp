@@ -4,8 +4,11 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
+#include <zlib.h>
 
-typedef std::pair<int, int> Interval;
+#include "kseq.h"
+
+KSEQ_INIT(gzFile, gzread)
 
 class Read
 { // read class
