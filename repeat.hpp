@@ -87,8 +87,8 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
 
-    uint64_t total_repeat_length = 0;
-    uint64_t total_read_length = 0;
+    long long total_repeat_length = 0;
+    long long total_read_length = 0;
 
     for (int i = 0; i < n_read; i++)
     {
@@ -175,7 +175,7 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
         }
     }
 
-    float fraction_of_repeat_length = (float)total_repeat_length / total_read_length;
+    double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
 
     fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
 
