@@ -12,18 +12,20 @@
     std::string outputfilename;
     int real_reads;
     int symmetric_overlaps;
+    int additional_kmers;
 
     void initParams()
     {
         reso = 500;
         kmer_length = 21;
-        kmer_frac=0.7;
+        kmer_frac=0.8;
         repeat_length = 10000;
         interval_length = 10000;
         flanking_length = 2000;
         outputfilename = "chopper";
         real_reads = 1;
         symmetric_overlaps = 0;
+        additional_kmers = 0;
     }
 
     void printParams()

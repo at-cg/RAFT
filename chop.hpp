@@ -167,7 +167,7 @@ bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParam
     // set up bloom filter
     bloom_parameters parameters;
     parameters.false_positive_probability = 0.001;
-    parameters.projected_element_count = std::max(num, 1000);
+    parameters.projected_element_count = std::max(num, 50000000);
     parameters.compute_optimal_parameters();
 
     bloom_filter *kmer_filter = new bloom_filter(parameters);
@@ -217,8 +217,6 @@ void create_kmer_from_repetitive_reads(bloom_filter *kmer_filter, const char *re
 
     fprintf(stdout, "Number of additional high freq k-mers in repetitive reads %d \n", added_kmers);
 }
-
-
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
 {
@@ -331,7 +329,7 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
 
     bloom_filter* kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
 
-    create_kmer_from_repetitive_reads(kmer_filter, "repetitive.fasta", param);
+    if(param.additional_kmers) create_kmer_from_repetitive_reads(kmer_filter, "repetitive.fasta", param);
 
     repeat_annotate(reads, kmer_filter, param);
 

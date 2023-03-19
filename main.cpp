@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:m:l:i:f:o:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:m:l:i:f:o:a:")) != -1)
     {
         switch (option)
         {
@@ -48,6 +48,9 @@ int main(int argc, char *argv[])
             break;
         case 'o':
             params.outputfilename = optarg;
+            break;
+        case 'a':
+            params.additional_kmers = atoi(optarg);
             break;
         default:
             printHelp(params);

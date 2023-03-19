@@ -6,7 +6,7 @@ PREFIX=output
 
 rm ${PREFIX}*
 
-$EXE -o ${PREFIX} -p 0.5 -l 2000 $READS $KMERS 
+$EXE -o ${PREFIX} -p 0.8 $READS $KMERS 
 
 grep ">" $OUTPUTSEQ > ${OUTPUTSEQ}.headers
 cat ${OUTPUTSEQ}.headers | awk -F '[=,-]' '{print $9"\t"$5"\t"$6}' | sort -k 1,1 -k2,2n -k3,3nr > ${OUTPUTSEQ}.headers.bed
