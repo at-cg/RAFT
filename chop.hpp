@@ -185,6 +185,41 @@ bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParam
     return kmer_filter;
 }
 
+void create_kmer_from_repetitive_reads(bloom_filter *kmer_filter, const char *repetitive_reads_filename, const algoParams &param)
+{
+    int k = param.kmer_length;
+    uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1 ;
+    int z = 0;
+    std::ifstream idt(repetitive_reads_filename);
+    std::string line1, line2;
+    int added_kmers = 0;
+
+    while (getline(idt, line1) && getline(idt, line2)){
+        uint64_t kmer[2] = {0, 0};
+        line2.erase(std::remove(line2.begin(), line2.end(), '\n'), line2.end());
+
+        for (int i = 0; i < line2.length(); ++i)
+        {
+            int c = seq_nt4_table[(uint8_t)line2[i]];
+            kmer[0] = (kmer[0] << 2 | c) & mask;             // forward k-mer
+            kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1; // reverse k-mer
+            z = kmer[0] < kmer[1] ? 0 : 1;                   // strand
+            if (i >= k)
+            {
+                if (!kmer_filter->contains(kmer[z]))
+                {
+                    added_kmers++;
+                    kmer_filter->insert(kmer[z]);
+                }
+            }
+        }
+    }
+
+    fprintf(stdout, "Number of additional high freq k-mers in repetitive reads %d \n", added_kmers);
+}
+
+
+
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
 {
     int read_num = 1;
@@ -249,8 +284,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
                 reads_final << read_seq << "\n";
                 read_num++;
-            }
-
+        }
         else {
             for (int j=0; j < final_stars.size()-2; j++){
 
@@ -277,7 +311,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 }
                     reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
                     read_num++;
-                }
+            }
         }
     }
 }
@@ -296,6 +330,8 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
     n_read = loadFASTA(readfilename, reads, umap, param);
 
     bloom_filter* kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
+
+    create_kmer_from_repetitive_reads(kmer_filter, "repetitive.fasta", param);
 
     repeat_annotate(reads, kmer_filter, param);
 
