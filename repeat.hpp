@@ -17,29 +17,13 @@ bool compare_event(std::pair<int, int> event1, std::pair<int, int> event2)
 }
 #endif
 
-#ifndef PAIR_ASCEND
-#define PAIR_ASCEND
-bool pairAscend(int &firstElem, int &secondElem)
-{
-    return firstElem < secondElem;
-}
-#endif
-
-#ifndef PAIR_DESCEND
-#define PAIR_DESCEND
-bool pairDescend(int &firstElem, int &secondElem)
-{
-    return firstElem > secondElem;
-}
-#endif
-
 void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::pair<int, int>> &coverage, Read *read,
     const algoParams &param)
 {
     int reso = param.reso;
     int intervals = read->len / reso;
 
-    if (intervals % reso)
+    if (read->len % reso)
     {
         intervals++;
     }
