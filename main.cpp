@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     }
 
     //print usage
-    if (argc <= optind + 1)
+    if (argc < optind + 2)
         printHelp(params);
 
     params.printParams();
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     auto tStart = std::chrono::system_clock::now();
     std::cout << "INFO, main(), started timer\n";
 
-    break_long_reads(argv[optind], argv[optind + 1], params);
+    break_long_reads(argv[optind], argv[optind + 1], argv[optind+2], params);
 
     std::chrono::duration<double> wctduration = (std::chrono::system_clock::now() - tStart);
     std::cout << "INFO, main(), program completed after " << wctduration.count() << " seconds\n";

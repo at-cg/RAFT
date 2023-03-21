@@ -127,14 +127,32 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     return num;
 }
 
-void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> &idx_pileup, 
+void save_repeat_reads(const char *fn, std::vector<Read *> &reads, 
     std::unordered_map<std::string, int> &umap, struct algoParams &param)
+{
+    int saved_reads=0;
+    
+    std::ifstream idt(fn);
+    std::string read_name;
+
+    while (idt >> read_name){
+        int read_id = addStringToMap(std::string(read_name), umap);
+        reads[read_id]->save=1;
+        saved_reads++;
+    }
+
+    fprintf(stdout, "INFO, Number of saved reads from file %d \n", saved_reads);
+}
+
+void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vector<std::vector<Overlap *>> &idx_pileup,
+                   std::unordered_map<std::string, int> &umap, struct algoParams &param)
 {
     paf_file_t *fp;
     paf_rec_t r;
     fp = paf_open(paffilename);
     int num = 0;
     int check_sym_ovlp = 1;
+    int saved_reads = 0;
 
     Overlap *first_ovl = new Overlap();
 
@@ -189,12 +207,22 @@ void create_pileup(const char *paffilename, std::vector<std::vector<Overlap *>> 
                 check_sym_ovlp=0;
             }
 
+            if (reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_B_id_]->save){
+                reads[new_ovl->read_B_id_]->save_overlap=1;
+                saved_reads++;
+            }
+            else if (!reads[new_ovl->read_A_id_]->save && reads[new_ovl->read_B_id_]->save)
+            {
+                reads[new_ovl->read_A_id_]->save_overlap = 1;
+                saved_reads++;
+            }
+
             num++;
     }
 
-    fprintf(stdout, "Symmetric overlaps %d \n", param.symmetric_overlaps);
+    fprintf(stdout, "INFO, Symmetric overlaps %d \n", param.symmetric_overlaps);
     fprintf(stdout, "INFO, length of alignments  %d()\n", num);
-
+    fprintf(stdout, "INFO, Number of saved reads from overlaps %d \n", saved_reads);
 }
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
@@ -212,90 +240,107 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         int end_pos = reads[i]->end_pos;
         std::string align = reads[i]->align;
         std::string chr = reads[i]->chr;
-
-        int parts = read_length / interval_length;
-
-        std::vector<int> initial_stars;
-        std::vector<int> final_stars;
-
-        initial_stars.push_back(0);
-
-        for (int j = 1; j < parts; j++)
+        if (reads[i]->save || reads[i]->save_overlap)
         {
-            initial_stars.push_back(j*interval_length);
-        }
-        initial_stars.push_back(read_length);
-
-        final_stars.push_back(initial_stars[0]);
-
-        int pos = 1;
-
-        for (int k = 0; k < reads[i]->long_repeats.size(); k++)
-        {
-            while (reads[i]->long_repeats[k].first > initial_stars[pos] and (pos < initial_stars.size()-1))
-            {
-                final_stars.push_back(initial_stars[pos]);
-                pos++;
-            }
-            while (reads[i]->long_repeats[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
-            {
-                pos++;
-            }
-        }
-
-        while(pos<initial_stars.size()){
-            final_stars.push_back(initial_stars[pos]);
-            pos++;
-        }
-
-        if(final_stars.size()==2){
             if (!param.real_reads)
             {
                 reads_final << ">read=" << read_num << "," << align << ",position="
                             << start_pos << "-" << end_pos
                             << ",length=" << read_length
                             << read_name.substr(read_name.find_last_of(',')) << "\n";
-            }else{
+            }
+            else
+            {
                 reads_final << ">read=" << read_num << "," << read_name << "\n";
             }
+            reads_final << read_seq << "\n";
+            read_num++;
 
-                reads_final << read_seq << "\n";
-                read_num++;
+        } else{
+
+            int parts = read_length / interval_length;
+
+            std::vector<int> initial_stars;
+            std::vector<int> final_stars;
+
+            initial_stars.push_back(0);
+
+            for (int j = 1; j < parts; j++)
+            {
+                initial_stars.push_back(j*interval_length);
+            }
+            initial_stars.push_back(read_length);
+
+            final_stars.push_back(initial_stars[0]);
+
+            int pos = 1;
+
+            for (int k = 0; k < reads[i]->long_repeats.size(); k++)
+            {
+                while (reads[i]->long_repeats[k].first > initial_stars[pos] and (pos < initial_stars.size()-1))
+                {
+                    final_stars.push_back(initial_stars[pos]);
+                    pos++;
+                }
+                while (reads[i]->long_repeats[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
+                {
+                    pos++;
+                }
             }
 
-        else {
-            for (int j=0; j < final_stars.size()-2; j++){
+            while(pos<initial_stars.size()){
+                final_stars.push_back(initial_stars[pos]);
+                pos++;
+            }
 
+            if(final_stars.size()==2){
                 if (!param.real_reads)
                 {
-                    if (align.compare("forward") == 0)
-                    {
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + final_stars[j] << "-"
-                                    << start_pos + final_stars[j + 2]
-                                    << ",length=" << final_stars[j + 2] - final_stars[j]
-                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
-                    }
-                    else if (align.compare("reverse") == 0)
-                    {
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - final_stars[j + 2] << "-"
-                                    << end_pos - final_stars[j]
-                                    << ",length=" << final_stars[j + 2] - final_stars[j]
-                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
-                    }
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << start_pos << "-" << end_pos
+                                << ",length=" << read_length
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
                 }else{
                     reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                    reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
+
+                    reads_final << read_seq << "\n";
                     read_num++;
                 }
+
+            else {
+                for (int j=0; j < final_stars.size()-2; j++){
+
+                    if (!param.real_reads)
+                    {
+                        if (align.compare("forward") == 0)
+                        {
+                            reads_final << ">read=" << read_num << "," << align << ",position="
+                                        << start_pos + final_stars[j] << "-"
+                                        << start_pos + final_stars[j + 2]
+                                        << ",length=" << final_stars[j + 2] - final_stars[j]
+                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        }
+                        else if (align.compare("reverse") == 0)
+                        {
+                            reads_final << ">read=" << read_num << "," << align << ",position="
+                                        << end_pos - final_stars[j + 2] << "-"
+                                        << end_pos - final_stars[j]
+                                        << ",length=" << final_stars[j + 2] - final_stars[j]
+                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        }
+                    }else{
+                        reads_final << ">read=" << read_num << "," << read_name << "\n";
+                    }
+                        reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
+                        read_num++;
+                    }
+            }
         }
     }
 }
 
-
-void break_long_reads(const char *readfilename, const char *paffilename, struct algoParams &param)
+void break_long_reads(const char *readfilename, const char *paffilename, const char *repeatreadsfilename, struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");
@@ -307,6 +352,9 @@ void break_long_reads(const char *readfilename, const char *paffilename, struct 
     std::unordered_map<std::string, int> umap; // size = count of reads
 
     n_read = loadFASTA(readfilename, reads, umap, param);
+    if (repeatreadsfilename)
+        save_repeat_reads(repeatreadsfilename, reads, umap, param);
+
     std::vector<std::vector<Overlap *>> idx_pileup; // this is the pileup
 
     for (int i = 0; i < n_read; i++)
@@ -314,7 +362,7 @@ void break_long_reads(const char *readfilename, const char *paffilename, struct 
         idx_pileup.push_back(std::vector<Overlap *>());
     }
 
-    create_pileup(paffilename, idx_pileup, umap, param);
+    create_pileup(paffilename, reads, idx_pileup, umap, param);
 
     repeat_annotate(reads, idx_pileup, param);
 
