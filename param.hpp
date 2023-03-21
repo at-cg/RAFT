@@ -13,6 +13,7 @@
     int real_reads;
     int symmetric_overlaps;
     int additional_kmers;
+    int bloom_filter_element_count;
 
     void initParams()
     {
@@ -26,6 +27,7 @@
         real_reads = 1;
         symmetric_overlaps = 0;
         additional_kmers = 0;
+        bloom_filter_element_count = 1000;
     }
 
     void printParams()
@@ -36,6 +38,7 @@
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
         std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
         std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";
+        std::cout << "INFO, printParams(), bloom_filter_element_count = " << bloom_filter_element_count << "\n";
     }
 };
 

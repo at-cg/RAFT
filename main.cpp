@@ -11,8 +11,8 @@ void printHelp(const algoParams &params)
     std::cout << "  -k NUM     kmer length " << params.kmer_length << "\n";
     std::cout << "  -p NUM     kmer frac " << params.kmer_frac << "\n";
     std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
-    std::cout << "  -v NUM     interval_length " << params.interval_length << "\n";
-    std::cout << "  -u NUM     flanking_length " << params.flanking_length << "\n";
+    std::cout << "  -i NUM     interval_length " << params.interval_length << "\n";
+    std::cout << "  -f NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     exit(1);
 }
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:m:l:i:f:o:a:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:a:b:")) != -1)
     {
         switch (option)
         {
@@ -51,6 +51,9 @@ int main(int argc, char *argv[])
             break;
         case 'a':
             params.additional_kmers = atoi(optarg);
+            break;
+        case 'b':
+            params.bloom_filter_element_count = atoi(optarg);
             break;
         default:
             printHelp(params);

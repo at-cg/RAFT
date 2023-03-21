@@ -167,7 +167,7 @@ bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParam
     // set up bloom filter
     bloom_parameters parameters;
     parameters.false_positive_probability = 0.001;
-    parameters.projected_element_count = std::max(num, 50000000);
+    parameters.projected_element_count = std::max(num, param.bloom_filter_element_count);
     parameters.compute_optimal_parameters();
 
     bloom_filter *kmer_filter = new bloom_filter(parameters);
@@ -277,7 +277,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                             << ",length=" << read_length
                             << read_name.substr(read_name.find_last_of(',')) << "\n";
             }else{
-                reads_final << ">read=" << read_num << ", " << read_name << "\n";
+                reads_final << ">read=" << read_num << "," << read_name << "\n";
             }
 
                 reads_final << read_seq << "\n";
@@ -305,7 +305,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                 }else{
-                    reads_final << ">read=" << read_num << ", " << read_name << "\n";
+                    reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
                     reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
                     read_num++;
