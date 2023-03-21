@@ -207,11 +207,12 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 check_sym_ovlp=0;
             }
 
-            if (reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_B_id_]->save){
+            if (reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_B_id_]->save && !reads[new_ovl->read_B_id_]->save_overlap)
+            {
                 reads[new_ovl->read_B_id_]->save_overlap=1;
                 saved_reads++;
             }
-            else if (!reads[new_ovl->read_A_id_]->save && reads[new_ovl->read_B_id_]->save)
+            else if (!reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_A_id_]->save_overlap && reads[new_ovl->read_B_id_]->save)
             {
                 reads[new_ovl->read_A_id_]->save_overlap = 1;
                 saved_reads++;
