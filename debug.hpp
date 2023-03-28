@@ -46,7 +46,7 @@ void create_kmer_hist_from_reads(const char *reads_filename, const char *kmer_fr
             if (i >= k)
             {
                 int freq = map.at(kmer[z]);
-                fprintf(stdout, "%d: ", freq);
+                fprintf(stdout, "%d,%d: ", i,freq);
                 for (int j=0; j < std::min(freq, 100) ; j++){
                     fprintf(stdout, "*");
                 }
