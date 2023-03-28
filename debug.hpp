@@ -33,7 +33,7 @@ void create_kmer_hist_from_reads(const char *reads_filename, const char *kmer_fr
 
     while (getline(idt, line1) && getline(idt, line2))
     {
-        fprintf(stdout, "%s\n", line1);
+        fprintf(stdout, "%s\n", line1.c_str());
         uint64_t kmer[2] = {0, 0};
         line2.erase(std::remove(line2.begin(), line2.end(), '\n'), line2.end());
 
@@ -45,8 +45,8 @@ void create_kmer_hist_from_reads(const char *reads_filename, const char *kmer_fr
             z = kmer[0] < kmer[1] ? 0 : 1;                   // strand
             if (i >= k)
             {
-                int freq = map.at(z);
-                fprintf(stdout, "%d", freq);
+                int freq = map.at(kmer[z]);
+                fprintf(stdout, "%d: ", freq);
                 for (int j=0;j<freq; j++){
                     fprintf(stdout, "*");
                 }
