@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "chop.hpp"
+#include "debug.hpp"
 
 void printHelp(const algoParams &params)
 {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:a:b:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:a:b:d:")) != -1)
     {
         switch (option)
         {
@@ -55,6 +55,9 @@ int main(int argc, char *argv[])
         case 'b':
             params.bloom_filter_element_count = atoi(optarg);
             break;
+        case 'd' : 
+            params.debug = atoi(optarg);
+            break;
         default:
             printHelp(params);
         }
@@ -65,6 +68,11 @@ int main(int argc, char *argv[])
         printHelp(params);
 
     params.printParams();
+
+    if(params.debug){
+        create_kmer_hist_from_reads(argv[optind], argv[optind + 1], params);
+        return 0;
+    }
 
     auto tStart = std::chrono::system_clock::now();
     std::cout << "INFO, main(), started timer\n";

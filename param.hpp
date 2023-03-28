@@ -11,9 +11,9 @@
     int flanking_length;
     std::string outputfilename;
     int real_reads;
-    int symmetric_overlaps;
     int additional_kmers;
     int bloom_filter_element_count;
+    int debug;
 
     void initParams()
     {
@@ -25,9 +25,9 @@
         flanking_length = 2000;
         outputfilename = "chopper";
         real_reads = 1;
-        symmetric_overlaps = 0;
         additional_kmers = 0;
         bloom_filter_element_count = 1000;
+        debug=0;
     }
 
     void printParams()

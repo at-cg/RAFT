@@ -135,9 +135,9 @@ uint64_t encodeKmer(const std::string &str)
 
     for (int i = 0; i < k; ++i)
     {
-            int c = seq_nt4_table[(uint8_t)str[i]];
-            kmer[0] = kmer[0] << 2 | c;
-            kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1;
+        int c = seq_nt4_table[(uint8_t)str[i]];
+        kmer[0] = kmer[0] << 2 | c;
+        kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1;
     }
 
     return kmer[0] < kmer[1] ? kmer[0] : kmer[1];
