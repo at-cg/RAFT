@@ -110,7 +110,7 @@ void profileCoverage2(bloom_filter *kmer_filter, std::vector<std::pair<int, floa
 
     int j = 0, z = 0;
     int k = param.kmer_length;
-    int candidiate_kmers, high_freq_kmers = 0;
+    int candidiate_kmers = 0, high_freq_kmers = 0;
     uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1, kmer[2] = {0, 0};
 
     for (int i = 0; i < read->len; ++i)
@@ -179,7 +179,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<std::vector<Overlap
 
             if (coverage[j].second >= high_cov)
             {
-                end = coverage[j].first + param.reso;
+                end = coverage[j + 1].first;
             }
             else
             {
@@ -308,7 +308,7 @@ void repeat_annotate2(std::vector<Read *> reads, bloom_filter *kmer_filter, cons
         {
             if (coverage[j].second >= param.kmer_frac)
             {
-                end = coverage[j].first + param.reso;
+                end = coverage[j + 1].first;
             }
             else
             {
