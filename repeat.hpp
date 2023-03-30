@@ -32,6 +32,8 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
     {
         coverage.push_back(std::tuple<int, int, int>());
         std::get<0>(coverage[i]) = i * reso;
+        std::get<1>(coverage[i]) = 0;
+        std::get<2>(coverage[i]) = 0;
     }
 
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
@@ -82,10 +84,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
  
     int cov_est = param.est_cov;
     int high_cov = cov_est * param.cov_mul;
-    int high_low_idn_cov = cov_est / param.cov_div;
-
     fprintf(stdout, "high_cov %d\n", high_cov);
-    fprintf(stdout, "high_low_idn_cov %d \n", high_low_idn_cov);
 
     long long total_coverage = 0;
     long long total_low_idn_coverage = 0;
@@ -114,7 +113,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             total_low_idn_coverage = total_low_idn_coverage + std::get<2>(coverage[j]);
             total_windows++;
 
-            if (std::get<1>(coverage[j]) >= high_cov || std::get<2>(coverage[j]) >= high_low_idn_cov)
+            if (std::get<1>(coverage[j]) >= high_cov || std::get<2>(coverage[j]))
             {
                 end = std::get<0>(coverage[j]) + param.reso;
             }
