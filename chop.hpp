@@ -123,7 +123,7 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     kseq_destroy(seq);
     gzclose(fp);
 
-    if(!parama.real_reads)
+    if(!param.real_reads)
         std::sort(reads.begin(), reads.end(), compare_read);
 
     return num;
