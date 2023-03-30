@@ -122,7 +122,8 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     kseq_destroy(seq);
     gzclose(fp);
 
-   std::sort(reads.begin(), reads.end(), compare_read);
+    if(!param.real_reads)
+        std::sort(reads.begin(), reads.end(), compare_read);
 
     return num;
 }
@@ -178,9 +179,8 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
                 new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
             }
-            // } else{
-            //     count_of_non_overlaps++;
-            // }
+
+            new_ovl->identity = double(r.ml)/r.bl;
 
             if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
             {

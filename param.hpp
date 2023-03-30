@@ -6,6 +6,7 @@
     int reso;
     int est_cov;
     double cov_mul;
+    double cov_div;
     int repeat_length;
     int interval_length;
     int flanking_length;
@@ -18,6 +19,7 @@
         reso = 50;
         est_cov = 0;
         cov_mul = 1.5;
+        cov_div = 3;
         repeat_length = 10000;
         interval_length = 10000;
         flanking_length = 2000;
@@ -30,6 +32,7 @@
     {
         std::cout << "INFO, printParams(), reso = " << reso << "\n";
         std::cout << "INFO, printParams(), est_cov = " << est_cov << "\n";
+        std::cout << "INFO, printParams(), cov_div = " << cov_div << "\n";
         std::cout << "INFO, printParams(), cov_mul = " << cov_mul << "\n";
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
         std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
