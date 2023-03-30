@@ -19,7 +19,8 @@ public:
     int end_pos;
     std::string align;
     std::string chr;
-    std::vector<std::pair<int, int>> long_repeats;
+    std::vector<std::pair<int, int>> long_repeats1;
+    std::vector<std::pair<int, int>> long_repeats2;
     int save = 0;
     int save_overlap = 0;
 

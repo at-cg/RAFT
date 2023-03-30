@@ -1,4 +1,5 @@
 #include "repeat.hpp"
+#include "paf.hpp"
 #include <unistd.h>
 #include <regex>
 #include <unordered_map>
@@ -122,7 +123,8 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     kseq_destroy(seq);
     gzclose(fp);
 
-   std::sort(reads.begin(), reads.end(), compare_read);
+    if(!parama.real_reads)
+        std::sort(reads.begin(), reads.end(), compare_read);
 
     return num;
 }
@@ -226,6 +228,98 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
     fprintf(stdout, "INFO, Number of saved reads from overlaps %d \n", saved_reads);
 }
 
+uint64_t encodeKmer(const std::string &str)
+{
+    uint64_t kmer[2] = {0, 0};
+    int k = str.length();
+    uint64_t shift1 = 2 * (k - 1);
+
+    for (int i = 0; i < k; ++i)
+    {
+            int c = seq_nt4_table[(uint8_t)str[i]];
+            kmer[0] = kmer[0] << 2 | c;
+            kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1;
+    }
+
+    return kmer[0] < kmer[1] ? kmer[0] : kmer[1];
+}
+
+bloom_filter *loadHighFreqKMers(const char *kmer_freq_filename, struct algoParams &param)
+{
+
+    std::ifstream idt(kmer_freq_filename);
+
+    std::string kmer;
+    int num = 0;
+    int freq;
+    while (idt >> kmer >> freq)
+            num++;
+
+    // kmer length used for kmer counting and mapping must be consistent
+    if (num > 0)
+    {
+            if (kmer.length() != param.kmer_length)
+            {
+                fprintf(stderr, "ERROR: input list of k-mers and parameter k are inconsistent\n");
+                abort();
+            }
+    }
+
+    // set up bloom filter
+    bloom_parameters parameters;
+    parameters.false_positive_probability = 0.001;
+    parameters.projected_element_count = std::max(num, param.bloom_filter_element_count);
+    parameters.compute_optimal_parameters();
+
+    bloom_filter *kmer_filter = new bloom_filter(parameters);
+
+    // read the file again
+    idt.clear();
+    idt.seekg(0);
+    while (idt >> kmer >> freq)
+    {
+            kmer_filter->insert(encodeKmer(kmer));
+    }
+
+    fprintf(stdout, "Number of high freq k-mers %d \n", num);
+
+    return kmer_filter;
+}
+
+void create_kmer_from_repetitive_reads(bloom_filter *kmer_filter, const char *repetitive_reads_filename, const algoParams &param)
+{
+    int k = param.kmer_length;
+    uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1;
+    int z = 0;
+    std::ifstream idt(repetitive_reads_filename);
+    std::string line1, line2;
+    int added_kmers = 0;
+
+    while (getline(idt, line1) && getline(idt, line2))
+    {
+            uint64_t kmer[2] = {0, 0};
+            line2.erase(std::remove(line2.begin(), line2.end(), '\n'), line2.end());
+
+            for (int i = 0; i < line2.length(); ++i)
+            {
+                int c = seq_nt4_table[(uint8_t)line2[i]];
+                kmer[0] = (kmer[0] << 2 | c) & mask;             // forward k-mer
+                kmer[1] = (kmer[1] >> 2) | (3ULL ^ c) << shift1; // reverse k-mer
+                z = kmer[0] < kmer[1] ? 0 : 1;                   // strand
+                if (i >= k)
+                {
+                    if (!kmer_filter->contains(kmer[z]))
+                    {
+                        added_kmers++;
+                        kmer_filter->insert(kmer[z]);
+                    }
+                }
+            }
+    }
+
+    fprintf(stdout, "Number of additional high freq k-mers in repetitive reads %d \n", added_kmers);
+}
+
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
 {
     int read_num = 1;
@@ -262,7 +356,8 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             int parts = read_length / interval_length;
 
             std::vector<int> initial_stars;
-            std::vector<int> final_stars;
+            std::vector<int> final_stars1;
+            std::vector<int> final_stars2;
 
             initial_stars.push_back(0);
 
@@ -272,29 +367,53 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             }
             initial_stars.push_back(read_length);
 
-            final_stars.push_back(initial_stars[0]);
+            final_stars1.push_back(initial_stars[0]);
 
             int pos = 1;
 
-            for (int k = 0; k < reads[i]->long_repeats.size(); k++)
+            for (int k = 0; k < reads[i]->long_repeats1.size(); k++)
             {
-                while (reads[i]->long_repeats[k].first > initial_stars[pos] and (pos < initial_stars.size()-1))
+                while (reads[i]->long_repeats1[k].first > initial_stars[pos] and (pos < initial_stars.size()-1))
                 {
-                    final_stars.push_back(initial_stars[pos]);
+                    final_stars1.push_back(initial_stars[pos]);
                     pos++;
                 }
-                while (reads[i]->long_repeats[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
+                while (reads[i]->long_repeats1[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
                 {
                     pos++;
                 }
             }
 
             while(pos<initial_stars.size()){
-                final_stars.push_back(initial_stars[pos]);
+                final_stars1.push_back(initial_stars[pos]);
                 pos++;
             }
 
-            if(final_stars.size()==2){
+            final_stars2.push_back(final_stars1[0]);
+
+            pos = 1;
+
+            for (int k = 0; k < reads[i]->long_repeats2.size(); k++)
+            {
+                while (reads[i]->long_repeats2[k].first > final_stars1[pos] and (pos < final_stars1.size() - 1))
+                {
+                    final_stars2.push_back(initial_stars[pos]);
+                    pos++;
+                }
+                while (reads[i]->long_repeats2[k].second >= final_stars1[pos] and (pos < final_stars1.size() - 1))
+                {
+                    pos++;
+                }
+            }
+
+            while (pos < final_stars1.size())
+            {
+                final_stars2.push_back(final_stars1[pos]);
+                pos++;
+            }
+
+            if (final_stars2.size() == 2)
+            {
                 if (!param.real_reads)
                 {
                     reads_final << ">read=" << read_num << "," << align << ",position="
@@ -307,41 +426,43 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
                     reads_final << read_seq << "\n";
                     read_num++;
-                }
+            }
 
             else {
-                for (int j=0; j < final_stars.size()-2; j++){
+                    for (int j = 0; j < final_stars2.size() - 2; j++)
+                    {
 
                     if (!param.real_reads)
                     {
                         if (align.compare("forward") == 0)
                         {
                             reads_final << ">read=" << read_num << "," << align << ",position="
-                                        << start_pos + final_stars[j] << "-"
-                                        << start_pos + final_stars[j + 2]
-                                        << ",length=" << final_stars[j + 2] - final_stars[j]
+                                        << start_pos + final_stars2[j] << "-"
+                                        << start_pos + final_stars2[j + 2]
+                                        << ",length=" << final_stars2[j + 2] - final_stars2[j]
                                         << read_name.substr(read_name.find_last_of(',')) << "\n";
                         }
                         else if (align.compare("reverse") == 0)
                         {
                             reads_final << ">read=" << read_num << "," << align << ",position="
-                                        << end_pos - final_stars[j + 2] << "-"
-                                        << end_pos - final_stars[j]
-                                        << ",length=" << final_stars[j + 2] - final_stars[j]
+                                        << end_pos - final_stars2[j + 2] << "-"
+                                        << end_pos - final_stars2[j]
+                                        << ",length=" << final_stars2[j + 2] - final_stars2[j]
                                         << read_name.substr(read_name.find_last_of(',')) << "\n";
                         }
                     }else{
                         reads_final << ">read=" << read_num << "," << read_name << "\n";
                     }
-                        reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
-                        read_num++;
+                    reads_final << read_seq.substr(final_stars2[j], final_stars2[j + 2] - final_stars2[j]) << "\n";
+                    read_num++;
                     }
             }
         }
     }
 }
 
-void break_long_reads(const char *readfilename, const char *paffilename, const char *repeatreadsfilename, struct algoParams &param)
+void break_long_reads(const char *readfilename, const char *paffilename, const char *kmer_freq_filename,
+                      const char *repeatreadsfilename, struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");
@@ -365,7 +486,13 @@ void break_long_reads(const char *readfilename, const char *paffilename, const c
 
     create_pileup(paffilename, reads, idx_pileup, umap, param);
 
-    repeat_annotate(reads, idx_pileup, param);
+    bloom_filter *kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
+
+    if (repeatreadsfilename)
+        create_kmer_from_repetitive_reads(kmer_filter, "repetitive.fasta", param);
+
+    repeat_annotate1(reads, idx_pileup, param);
+    repeat_annotate2(reads, kmer_filter, param);
 
     break_reads(param, n_read, reads, reads_final);
 }
