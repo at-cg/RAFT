@@ -179,7 +179,7 @@ void repeat_annotate1(std::vector<Read *> reads, std::vector<std::vector<Overlap
 
             if (coverage[j].second >= high_cov)
             {
-                end = coverage[j + 1].first;
+                end = coverage[j].first + param.reso;
             }
             else
             {
@@ -308,7 +308,7 @@ void repeat_annotate2(std::vector<Read *> reads, bloom_filter *kmer_filter, cons
         {
             if (coverage[j].second >= param.kmer_frac)
             {
-                end = coverage[j + 1].first;
+                end = coverage[j].first + param.reso*10;
             }
             else
             {
