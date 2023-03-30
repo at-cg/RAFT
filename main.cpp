@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:a:b:d:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:b:d:")) != -1)
     {
         switch (option)
         {
@@ -48,9 +48,6 @@ int main(int argc, char *argv[])
             break;
         case 'o':
             params.outputfilename = optarg;
-            break;
-        case 'a':
-            params.additional_kmers = atoi(optarg);
             break;
         case 'b':
             params.bloom_filter_element_count = atoi(optarg);
@@ -77,7 +74,7 @@ int main(int argc, char *argv[])
     auto tStart = std::chrono::system_clock::now();
     std::cout << "INFO, main(), started timer\n";
 
-    break_long_reads(argv[optind], argv[optind + 1], params);
+    break_long_reads(argv[optind], argv[optind + 1], argv[optind + 2], params);
 
     std::chrono::duration<double> wctduration = (std::chrono::system_clock::now() - tStart);
     std::cout << "INFO, main(), program completed after " << wctduration.count() << " seconds\n";

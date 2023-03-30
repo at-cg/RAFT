@@ -11,7 +11,6 @@
     int flanking_length;
     std::string outputfilename;
     int real_reads;
-    int additional_kmers;
     int bloom_filter_element_count;
     int debug;
 
@@ -25,7 +24,6 @@
         flanking_length = 2000;
         outputfilename = "chopper";
         real_reads = 1;
-        additional_kmers = 0;
         bloom_filter_element_count = 1000;
         debug=0;
     }

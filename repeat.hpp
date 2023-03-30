@@ -115,10 +115,11 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
             {
                 if ((end - start) >= param.repeat_length)
                 {
+                    int flanking_length = (end - start)*0.04;
                     total_repeat_length = total_repeat_length + end - start;
 
-                    s = start - param.flanking_length;
-                    e = end + param.flanking_length;
+                    s = start - flanking_length;
+                    e = end + flanking_length;
 
                     if (s <= 0)
                     {
@@ -132,8 +133,8 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
 
                     if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
                     {
-
-                        reads[i]->long_repeats.back().second = e;
+                        reads[i]->long_repeats.back().first = std::min(reads[i]->long_repeats.back().first,s);
+                        reads[i]->long_repeats.back().second = std::max(reads[i]->long_repeats.back().second, e);
                     }
                     else
                     {
@@ -148,10 +149,11 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
 
         if ((end - start) >= param.repeat_length)
         {
-            total_repeat_length=total_repeat_length + end - start;
+            int flanking_length = (end - start) * 0.04;
+            total_repeat_length = total_repeat_length + end - start;
 
-            s = start - param.flanking_length;
-            e = end + param.flanking_length;
+            s = start - flanking_length;
+            e = end + flanking_length;
 
             if (s <= 0)
             {
@@ -165,8 +167,8 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
 
             if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
             {
-
-                reads[i]->long_repeats.back().second = e;
+                reads[i]->long_repeats.back().first = std::min(reads[i]->long_repeats.back().first, s);
+                reads[i]->long_repeats.back().second = std::max(reads[i]->long_repeats.back().second, e);
             }
             else
             {

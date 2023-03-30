@@ -314,7 +314,8 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
     }
 }
 
-void break_long_reads(const char *readfilename, const char *kmer_freq_filename, struct algoParams &param)
+void break_long_reads(const char *readfilename, const char *kmer_freq_filename, const char *repeatreadsfilename, 
+    struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");
@@ -329,7 +330,8 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
 
     bloom_filter* kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
 
-    if(param.additional_kmers) create_kmer_from_repetitive_reads(kmer_filter, "repetitive.fasta", param);
+    if (repeatreadsfilename)
+        create_kmer_from_repetitive_reads(kmer_filter, repeatreadsfilename, param);
 
     repeat_annotate(reads, kmer_filter, param);
 
