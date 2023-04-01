@@ -115,7 +115,7 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
             {
                 if ((end - start) >= param.repeat_length)
                 {
-                    int flanking_length = std::min((end - start), param.flanking_length);
+                    int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
                     total_repeat_length = total_repeat_length + end - start;
 
                     s = start - flanking_length;
@@ -149,7 +149,7 @@ void repeat_annotate(std::vector<Read *> reads, bloom_filter *kmer_filter, const
 
         if ((end - start) >= param.repeat_length)
         {
-            int flanking_length = std::min((end - start), param.flanking_length);
+            int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
             total_repeat_length = total_repeat_length + end - start;
 
             s = start - flanking_length;

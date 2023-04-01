@@ -10,9 +10,10 @@ void printHelp(const algoParams &params)
     std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
     std::cout << "  -k NUM     kmer length " << params.kmer_length << "\n";
     std::cout << "  -p NUM     kmer frac " << params.kmer_frac << "\n";
-    std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
-    std::cout << "  -i NUM     interval_length " << params.interval_length << "\n";
-    std::cout << "  -f NUM     flanking_length " << params.flanking_length << "\n";
+    std::cout << "  -l NUM     repeat length " << params.repeat_length << "\n";
+    std::cout << "  -i NUM     interval length " << params.interval_length << "\n";
+    std::cout << "  -f NUM     flanking length " << params.flanking_length << "\n";
+    std::cout << "  -g NUM     flanking frac " << params.flanking_frac << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     exit(1);
 }
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:l:i:f:o:b:d:")) != -1)
+    while ((option = getopt(argc, argv, "r:k:p:l:i:f:g:o:b:d:")) != -1)
     {
         switch (option)
         {
@@ -45,6 +46,9 @@ int main(int argc, char *argv[])
             break;
         case 'f':
             params.flanking_length = atoi(optarg);
+            break;
+        case 'g':
+            params.flanking_frac = atof(optarg);
             break;
         case 'o':
             params.outputfilename = optarg;
