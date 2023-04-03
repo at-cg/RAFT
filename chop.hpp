@@ -239,6 +239,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         std::vector<int> initial_stars;
         std::vector<int> final_stars1;
         std::vector<int> final_stars2;
+        std::vector<int> final_stars3;
 
         initial_stars.push_back(0);
 
@@ -294,7 +295,30 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             pos++;
         }
 
-        if(final_stars2.size()==2){
+        final_stars3.push_back(final_stars2[0]);
+
+        pos = 1;
+
+        for (int k = 0; k < reads[i]->long_repeats3.size(); k++)
+        {
+            while (reads[i]->long_repeats3[k].first > final_stars2[pos] and (pos < final_stars2.size() - 1))
+            {
+                final_stars3.push_back(initial_stars[pos]);
+                pos++;
+            }
+            while (reads[i]->long_repeats3[k].second >= final_stars2[pos] and (pos < final_stars2.size() - 1))
+            {
+                pos++;
+            }
+        }
+
+        while (pos < final_stars2.size())
+        {
+            final_stars3.push_back(final_stars2[pos]);
+            pos++;
+        }
+
+        if(final_stars3.size()==2){
             if (!param.real_reads)
             {
                 reads_final << ">read=" << read_num << "," << align << ",position="
@@ -309,32 +333,33 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 read_num++;
         }
         else {
-            for (int j=0; j < final_stars2.size()-2; j++){
+                for (int j = 0; j < final_stars3.size() - 2; j++)
+                {
 
                 if (!param.real_reads)
                 {
                     if (align.compare("forward") == 0)
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + final_stars2[j] << "-"
-                                    << start_pos + final_stars2[j + 2]
-                                    << ",length=" << final_stars2[j + 2] - final_stars2[j]
+                                    << start_pos + final_stars3[j] << "-"
+                                    << start_pos + final_stars3[j + 2]
+                                    << ",length=" << final_stars3[j + 2] - final_stars3[j]
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                     else if (align.compare("reverse") == 0)
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - final_stars2[j + 2] << "-"
-                                    << end_pos - final_stars2[j]
-                                    << ",length=" << final_stars2[j + 2] - final_stars2[j]
+                                    << end_pos - final_stars3[j + 2] << "-"
+                                    << end_pos - final_stars3[j]
+                                    << ",length=" << final_stars3[j + 2] - final_stars3[j]
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                 }else{
                     reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                    reads_final << read_seq.substr(final_stars2[j], final_stars2[j + 2] - final_stars2[j]) << "\n";
-                    read_num++;
-            }
+                reads_final << read_seq.substr(final_stars3[j], final_stars3[j + 2] - final_stars3[j]) << "\n";
+                read_num++;
+                }
         }
     }
 }
@@ -360,6 +385,7 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
 
     repeat_annotate1(reads, kmer_filter, param);
     repeat_annotate2(reads, kmer_filter, param);
+    repeat_annotate3(reads, kmer_filter, param);
 
     break_reads(param, n_read, reads, reads_final);
 }

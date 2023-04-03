@@ -5,6 +5,7 @@
 {
     int reso1;
     int reso2;
+    int reso3;
     int kmer_length;
     float kmer_frac;
     int repeat_length;
@@ -20,6 +21,7 @@
     {
         reso1 = 50;
         reso2 = 500;
+        reso3 = 5000;
         kmer_length = 21;
         kmer_frac = 0.1;
         repeat_length = 800;
@@ -36,6 +38,7 @@
     {
         std::cout << "INFO, printParams(), reso1 = " << reso1 << "\n";
         std::cout << "INFO, printParams(), reso2 = " << reso2 << "\n";
+        std::cout << "INFO, printParams(), reso3 = " << reso3 << "\n";
         std::cout << "INFO, printParams(), kmer_length = " << kmer_length << "\n";
         std::cout << "INFO, printParams(), kmer_frac = " << kmer_frac << "\n";
         std::cout << "INFO, printParams(), repeat_length = " << repeat_length << "\n";
