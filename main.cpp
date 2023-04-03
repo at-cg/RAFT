@@ -7,7 +7,8 @@
 void printHelp(const algoParams &params)
 {
     std::cout << "Usage: chopper [options] <input-reads.fa> <in.paf>\n";
-    std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
+    std::cout << "  -r NUM     resolution of coverage " << params.reso1 << "\n";
+    std::cout << "  -s NUM     resolution of coverage " << params.reso2 << "\n";
     std::cout << "  -k NUM     kmer length " << params.kmer_length << "\n";
     std::cout << "  -p NUM     kmer frac " << params.kmer_frac << "\n";
     std::cout << "  -l NUM     repeat length " << params.repeat_length << "\n";
@@ -25,12 +26,15 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:k:p:l:i:f:g:o:b:d:")) != -1)
+    while ((option = getopt(argc, argv, "r:s:k:p:l:i:f:g:o:b:d:")) != -1)
     {
         switch (option)
         {
         case 'r':
-            params.reso = atoi(optarg);
+            params.reso1 = atoi(optarg);
+            break;
+        case 's':
+            params.reso2 = atoi(optarg);
             break;
         case 'k':
             params.kmer_length = atoi(optarg);
