@@ -49,7 +49,7 @@ void profileCoverage(bloom_filter *kmer_filter, std::vector<std::pair<int, float
 
     int j=0, z=0;
     int k = param.kmer_length;
-    int candidiate_kmers, high_freq_kmers = 0;
+    int candidiate_kmers=0, high_freq_kmers = 0;
     uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1, kmer[2] = {0, 0};
 
     for (int i = 0; i < read->len; ++i)
@@ -79,7 +79,7 @@ void profileCoverage(bloom_filter *kmer_filter, std::vector<std::pair<int, float
     return;
 }
 
-void repeat_annotate1(std::vector<Read *> reads, bloom_filter *kmer_filter, const algoParams &param)
+void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, const algoParams &param)
 {
 
     int n_read = reads.size();
@@ -206,7 +206,7 @@ void repeat_annotate1(std::vector<Read *> reads, bloom_filter *kmer_filter, cons
     }
 }
 
-void repeat_annotate2(std::vector<Read *> reads, bloom_filter *kmer_filter, const algoParams &param)
+void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, const algoParams &param)
 {
 
     int n_read = reads.size();
@@ -334,7 +334,7 @@ void repeat_annotate2(std::vector<Read *> reads, bloom_filter *kmer_filter, cons
     }
 }
 
-void repeat_annotate3(std::vector<Read *> reads, bloom_filter *kmer_filter, const algoParams &param)
+void repeat_annotate3(std::vector<Read *> &reads, bloom_filter *kmer_filter, const algoParams &param)
 {
 
     int n_read = reads.size();

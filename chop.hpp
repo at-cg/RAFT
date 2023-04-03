@@ -218,6 +218,31 @@ void create_kmer_from_repetitive_reads(bloom_filter *kmer_filter, const char *re
     fprintf(stdout, "Number of additional high freq k-mers in repetitive reads %d \n", added_kmers);
 }
 
+void populateFinalStars(const std::vector<std::pair<int, int>> &long_repeats, const std::vector<int> &initial_stars, std::vector<int> &final_stars)
+{
+
+    final_stars.push_back(initial_stars[0]);
+    int pos = 1;
+
+    for (const auto &long_repeat : long_repeats)
+    {
+        while (long_repeat.first > initial_stars[pos] && pos < initial_stars.size() - 1)
+        {
+            final_stars.push_back(initial_stars[pos]);
+            pos++;
+        }
+        while (long_repeat.second >= initial_stars[pos] && pos < initial_stars.size() - 1)
+        {
+            pos++;
+        }
+    }
+
+    for (; pos < initial_stars.size(); pos++)
+    {
+        final_stars.push_back(initial_stars[pos]);
+    }
+}
+
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
 {
     int read_num = 1;
@@ -245,78 +270,14 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
         for (int j = 1; j < parts; j++)
         {
-            initial_stars.push_back(j*interval_length);
+            initial_stars.push_back(j * interval_length);
         }
+
         initial_stars.push_back(read_length);
 
-        final_stars1.push_back(initial_stars[0]);
-
-        int pos = 1;
-
-        for (int k = 0; k < reads[i]->long_repeats1.size(); k++)
-        {
-            while (reads[i]->long_repeats1[k].first > initial_stars[pos] and (pos < initial_stars.size() - 1))
-            {
-                final_stars1.push_back(initial_stars[pos]);
-                pos++;
-            }
-            while (reads[i]->long_repeats1[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
-            {
-                pos++;
-            }
-        }
-
-        while (pos < initial_stars.size())
-        {
-            final_stars1.push_back(initial_stars[pos]);
-            pos++;
-        }
-
-        final_stars2.push_back(final_stars1[0]);
-
-        pos = 1;
-
-        for (int k = 0; k < reads[i]->long_repeats2.size(); k++)
-        {
-            while (reads[i]->long_repeats2[k].first > final_stars1[pos] and (pos < final_stars1.size() - 1))
-            {
-                final_stars2.push_back(initial_stars[pos]);
-                pos++;
-            }
-            while (reads[i]->long_repeats2[k].second >= final_stars1[pos] and (pos < final_stars1.size() - 1))
-            {
-                pos++;
-            }
-        }
-
-        while (pos < final_stars1.size())
-        {
-            final_stars2.push_back(final_stars1[pos]);
-            pos++;
-        }
-
-        final_stars3.push_back(final_stars2[0]);
-
-        pos = 1;
-
-        for (int k = 0; k < reads[i]->long_repeats3.size(); k++)
-        {
-            while (reads[i]->long_repeats3[k].first > final_stars2[pos] and (pos < final_stars2.size() - 1))
-            {
-                final_stars3.push_back(initial_stars[pos]);
-                pos++;
-            }
-            while (reads[i]->long_repeats3[k].second >= final_stars2[pos] and (pos < final_stars2.size() - 1))
-            {
-                pos++;
-            }
-        }
-
-        while (pos < final_stars2.size())
-        {
-            final_stars3.push_back(final_stars2[pos]);
-            pos++;
-        }
+        populateFinalStars(reads[i]->long_repeats1, initial_stars, final_stars1);
+        populateFinalStars(reads[i]->long_repeats2, final_stars1, final_stars2);
+        populateFinalStars(reads[i]->long_repeats3, final_stars2, final_stars3);
 
         if(final_stars3.size()==2){
             if (!param.real_reads)
