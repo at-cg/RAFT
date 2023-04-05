@@ -70,7 +70,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
             while (std::get<1>(events[pos]) >= k * reso)
             {
                 std::get<1>(coverage[k])++;
-                if(std::get<2>(events[pos])<=0.98){
+                if(!param.symmetric_overlaps && std::get<2>(events[pos])<=0.98){
                     std::get<2>(coverage[k])++;
                 }
                 k++;
