@@ -277,7 +277,6 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
         populateFinalStars(reads[i]->long_repeats1, initial_stars, final_stars1);
         populateFinalStars(reads[i]->long_repeats2, final_stars1, final_stars2);
-        populateFinalStars(reads[i]->long_repeats3, final_stars2, final_stars3);
 
         if(final_stars3.size()==2){
             if (!param.real_reads)
@@ -346,7 +345,6 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
 
     repeat_annotate1(reads, kmer_filter, param);
     repeat_annotate2(reads, kmer_filter, param);
-    repeat_annotate3(reads, kmer_filter, param);
 
     break_reads(param, n_read, reads, reads_final);
 }

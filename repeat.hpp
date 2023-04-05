@@ -30,6 +30,14 @@ unsigned char seq_nt4_table[256] = {
 
 #endif
 
+#ifndef COMPARE_START_REPEATS
+#define COMPARE_START_REPEATS
+bool compare_start_repeat(std::pair<int, int> repeat1, std::pair<int, int> repeat2)
+{
+    return std::get<0>(repeat1) < std::get<0>(repeat2);
+}
+#endif
+
 void profileCoverage(bloom_filter *kmer_filter, std::vector<std::pair<int, float>> &coverage, Read *read,
                      const algoParams &param, int reso)
 {
@@ -131,15 +139,8 @@ void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                         e = reads[i]->len;
                     }
 
-                    if (reads[i]->long_repeats1.size() && (s <= reads[i]->long_repeats1.back().second))
-                    {
-                        reads[i]->long_repeats1.back().first = std::min(reads[i]->long_repeats1.back().first,s);
-                        reads[i]->long_repeats1.back().second = std::max(reads[i]->long_repeats1.back().second, e);
-                    }
-                    else
-                    {
-                        reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
-                    }
+                    reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
+                    
                 }
 
                 start = coverage[j + 1].first;
@@ -165,15 +166,8 @@ void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                 e = reads[i]->len;
             }
 
-            if (reads[i]->long_repeats1.size() && (s <= reads[i]->long_repeats1.back().second))
-            {
-                reads[i]->long_repeats1.back().first = std::min(reads[i]->long_repeats1.back().first, s);
-                reads[i]->long_repeats1.back().second = std::max(reads[i]->long_repeats1.back().second, e);
-            }
-            else
-            {
-                reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
-            }
+            reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
+            
         }
     }
 
@@ -258,15 +252,8 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                         e = reads[i]->len;
                     }
 
-                    if (reads[i]->long_repeats2.size() && (s <= reads[i]->long_repeats2.back().second))
-                    {
-                        reads[i]->long_repeats2.back().first = std::min(reads[i]->long_repeats2.back().first, s);
-                        reads[i]->long_repeats2.back().second = std::max(reads[i]->long_repeats2.back().second, e);
-                    }
-                    else
-                    {
-                        reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
-                    }
+                    reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
+                    
                 }
 
                 start = coverage[j + 1].first;
@@ -292,15 +279,8 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                 e = reads[i]->len;
             }
 
-            if (reads[i]->long_repeats2.size() && (s <= reads[i]->long_repeats2.back().second))
-            {
-                reads[i]->long_repeats2.back().first = std::min(reads[i]->long_repeats2.back().first, s);
-                reads[i]->long_repeats2.back().second = std::max(reads[i]->long_repeats2.back().second, e);
-            }
-            else
-            {
-                reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
-            }
+            reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
+            
         }
     }
 
@@ -326,134 +306,6 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                 {
                     long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats2[j].second
                                      << "\t" << reads[i]->end_pos - reads[i]->long_repeats2[j].first << std::endl;
-                }
-            }
-        }
-
-        long_repeats << std::endl;
-    }
-}
-
-void repeat_annotate3(std::vector<Read *> &reads, bloom_filter *kmer_filter, const algoParams &param)
-{
-
-    int n_read = reads.size();
-    std::ofstream cov(param.outputfilename + ".coverage3.txt");
-    std::ofstream long_repeats(param.outputfilename + ".long_repeats3.txt");
-    std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats3.bed");
-
-    long long total_repeat_length = 0;
-    long long total_read_length = 0;
-
-    for (int i = 0; i < n_read; i++)
-    {
-        total_read_length = total_read_length + reads[i]->len;
-        std::vector<std::pair<int, float>> coverage;
-        profileCoverage(kmer_filter, coverage, reads[i], param, param.reso3);
-
-        cov << "read " << i << " ";
-        for (int j = 0; j < coverage.size(); j++)
-            cov << coverage[j].first << "," << coverage[j].second << " ";
-        cov << std::endl;
-
-        // get the longest consecutive region that has high coverage, high coverage = estimated coverage * 1.5
-        int start = 0;
-        int end = start;
-        int s, e = 0;
-        for (int j = 0; j < coverage.size(); j++)
-        {
-            if (coverage[j].second >= param.kmer_frac)
-            {
-                end = coverage[j].first + param.reso3;
-            }
-            else
-            {
-                if ((end - start) >= param.repeat_length)
-                {
-                    int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
-                    total_repeat_length = total_repeat_length + end - start;
-
-                    s = start - flanking_length;
-                    e = end + flanking_length;
-
-                    if (s <= 0)
-                    {
-                        s = 0;
-                    }
-
-                    if (e >= reads[i]->len)
-                    {
-                        e = reads[i]->len;
-                    }
-
-                    if (reads[i]->long_repeats3.size() && (s <= reads[i]->long_repeats3.back().second))
-                    {
-                        reads[i]->long_repeats3.back().first = std::min(reads[i]->long_repeats3.back().first, s);
-                        reads[i]->long_repeats3.back().second = std::max(reads[i]->long_repeats3.back().second, e);
-                    }
-                    else
-                    {
-                        reads[i]->long_repeats3.push_back(std::pair<int, int>(s, e));
-                    }
-                }
-
-                start = coverage[j + 1].first;
-                end = start;
-            }
-        }
-
-        if ((end - start) >= param.repeat_length)
-        {
-            int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
-            total_repeat_length = total_repeat_length + end - start;
-
-            s = start - flanking_length;
-            e = end + flanking_length;
-
-            if (s <= 0)
-            {
-                s = 0;
-            }
-
-            if (e >= reads[i]->len)
-            {
-                e = reads[i]->len;
-            }
-
-            if (reads[i]->long_repeats3.size() && (s <= reads[i]->long_repeats3.back().second))
-            {
-                reads[i]->long_repeats3.back().first = std::min(reads[i]->long_repeats3.back().first, s);
-                reads[i]->long_repeats3.back().second = std::max(reads[i]->long_repeats3.back().second, e);
-            }
-            else
-            {
-                reads[i]->long_repeats3.push_back(std::pair<int, int>(s, e));
-            }
-        }
-    }
-
-    double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
-
-    fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
-
-    for (int i = 0; i < n_read; i++)
-    {
-        long_repeats << "read " << i << ", ";
-        for (int j = 0; j < reads[i]->long_repeats3.size(); j++)
-        {
-            long_repeats << reads[i]->long_repeats3[j].first << "," << reads[i]->long_repeats3[j].second << "    ";
-
-            if (!param.real_reads)
-            {
-                if (reads[i]->align.compare("forward") == 0)
-                {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats3[j].first
-                                     << "\t" << reads[i]->start_pos + reads[i]->long_repeats3[j].second << std::endl;
-                }
-                else if (reads[i]->align.compare("reverse") == 0)
-                {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats3[j].second
-                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats3[j].first << std::endl;
                 }
             }
         }
