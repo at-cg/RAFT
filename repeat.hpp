@@ -17,6 +17,14 @@ bool compare_event(std::tuple<int, int, double> event1, std::tuple<int, int, dou
 }
 #endif
 
+#ifndef COMPARE_START_REPEATS
+#define COMPARE_START_REPEATS
+bool compare_start_repeat(std::pair<int, int> repeat1, std::pair<int, int> repeat2)
+{
+    return std::get<0>(repeat1) < std::get<0>(repeat2);
+}
+#endif
+
 void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<int, int, int>> &coverage, Read *read,
     const algoParams &param)
 {
@@ -121,10 +129,11 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             {
                 if ((end - start) >= param.repeat_length)
                 {
+                    int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
                     total_repeat_length = total_repeat_length + end - start;
 
-                    s = start - param.flanking_length;
-                    e = end + param.flanking_length;
+                    s = start - flanking_length;
+                    e = end + flanking_length;
 
                     if (s <= 0)
                     {
@@ -136,15 +145,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
                         e = reads[i]->len;
                     }
 
-                    if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
-                    {
-
-                        reads[i]->long_repeats.back().second = e;
-                    }
-                    else
-                    {
-                        reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
-                    }
+                    reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
+                    
                 }
 
                 start = std::get<0>(coverage[j + 1]);
@@ -154,10 +156,11 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
 
         if ((end - start) >= param.repeat_length)
         {
-            total_repeat_length=total_repeat_length + end - start;
+            int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
+            total_repeat_length = total_repeat_length + end - start;
 
-            s = start - param.flanking_length;
-            e = end + param.flanking_length;
+            s = start - flanking_length;
+            e = end + flanking_length;
 
             if (s <= 0)
             {
@@ -168,17 +171,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             {
                 e = reads[i]->len;
             }
-
-            if (reads[i]->long_repeats.size() && (s <= reads[i]->long_repeats.back().second))
-            {
-
-                reads[i]->long_repeats.back().second = e;
-            }
-            else
-            {
-                reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
-            }
+ 
+            reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
+            
         }
+
+        std::sort(reads[i]->long_repeats.begin(), reads[i]->long_repeats.end(), compare_start_repeat);
     }
 
     double coverage_per_window = (double)total_coverage / total_windows;
