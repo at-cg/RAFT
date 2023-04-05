@@ -139,7 +139,7 @@ void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                         e = reads[i]->len;
                     }
 
-                    reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
+                    reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
                     
                 }
 
@@ -166,10 +166,13 @@ void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                 e = reads[i]->len;
             }
 
-            reads[i]->long_repeats1.push_back(std::pair<int, int>(s, e));
+            reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
             
         }
+
+        std::sort(reads[i]->long_repeats.begin(), reads[i]->long_repeats.end(), compare_start_repeat);
     }
+
 
     double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
 
@@ -178,20 +181,20 @@ void repeat_annotate1(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
     for (int i = 0; i < n_read; i++)
     {
         long_repeats << "read " << i << ", ";
-        for (int j = 0; j < reads[i]->long_repeats1.size(); j++)
+        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
         {
-            long_repeats << reads[i]->long_repeats1[j].first << "," << reads[i]->long_repeats1[j].second << "    ";
+            long_repeats << reads[i]->long_repeats[j].first << "," << reads[i]->long_repeats[j].second << "    ";
             
             if(!param.real_reads){
                 if (reads[i]->align.compare("forward") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats1[j].first
-                                    << "\t" << reads[i]->start_pos + reads[i]->long_repeats1[j].second << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].first
+                                    << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].second << std::endl;
                 }
                 else if (reads[i]->align.compare("reverse") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats1[j].second
-                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats1[j].first << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].second
+                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].first << std::endl;
                 }
             }
         }
@@ -252,7 +255,7 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                         e = reads[i]->len;
                     }
 
-                    reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
+                    reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
                     
                 }
 
@@ -279,9 +282,10 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
                 e = reads[i]->len;
             }
 
-            reads[i]->long_repeats2.push_back(std::pair<int, int>(s, e));
+            reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
             
         }
+        std::sort(reads[i]->long_repeats.begin(), reads[i]->long_repeats.end(), compare_start_repeat);
     }
 
     double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
@@ -291,21 +295,21 @@ void repeat_annotate2(std::vector<Read *> &reads, bloom_filter *kmer_filter, con
     for (int i = 0; i < n_read; i++)
     {
         long_repeats << "read " << i << ", ";
-        for (int j = 0; j < reads[i]->long_repeats2.size(); j++)
+        for (int j = 0; j < reads[i]->long_repeats.size(); j++)
         {
-            long_repeats << reads[i]->long_repeats2[j].first << "," << reads[i]->long_repeats2[j].second << "    ";
+            long_repeats << reads[i]->long_repeats[j].first << "," << reads[i]->long_repeats[j].second << "    ";
 
             if (!param.real_reads)
             {
                 if (reads[i]->align.compare("forward") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats2[j].first
-                                     << "\t" << reads[i]->start_pos + reads[i]->long_repeats2[j].second << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].first
+                                     << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].second << std::endl;
                 }
                 else if (reads[i]->align.compare("reverse") == 0)
                 {
-                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats2[j].second
-                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats2[j].first << std::endl;
+                    long_repeats_bed << reads[i]->chr << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].second
+                                     << "\t" << reads[i]->end_pos - reads[i]->long_repeats[j].first << std::endl;
                 }
             }
         }

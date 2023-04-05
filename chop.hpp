@@ -5,7 +5,7 @@
 
 #ifndef COMPARE_READ
 #define COMPARE_READ
-bool compare_read(Read * read1, Read * read2)
+bool compare_read(Read *read1, Read *read2)
 {
     return read1->id < read2->id;
 }
@@ -93,36 +93,39 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
     fp = gzopen(fn, "r");
     seq = kseq_init(fp);
     int num = 0;
- 
+
     while ((l = kseq_read(seq)) >= 0)
     {
-            if (num == 0)
+        if (num == 0)
+        {
+            if (std::regex_match(seq->name.s, std::regex("^read=[0-9]+,[a-z]+,position=[0-9]+-[0-9]+,length=[0-9]+,(.*)")))
             {
-                if (std::regex_match(seq->name.s, std::regex("^read=[0-9]+,[a-z]+,position=[0-9]+-[0-9]+,length=[0-9]+,(.*)")))
-                {
-                    param.real_reads=0;                
-                }
-                fprintf(stdout, "Real Reads %d \n", param.real_reads);
+                param.real_reads = 0;
             }
-            if(param.real_reads){
-                int read_id = addStringToMap(std::string(seq->name.s), umap);
-                Read *new_r = new Read(read_id, strlen(seq->seq.s), std::string(seq->name.s),
-                                       std::string(seq->seq.s));
-                reads.push_back(new_r);
-            }else{
-                Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
-                                    std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
-                                    get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
-                reads.push_back(new_r);
-            }
-            
-            num++;
+            fprintf(stdout, "Real Reads %d \n", param.real_reads);
+        }
+        if (param.real_reads)
+        {
+            int read_id = addStringToMap(std::string(seq->name.s), umap);
+            Read *new_r = new Read(read_id, strlen(seq->seq.s), std::string(seq->name.s),
+                                   std::string(seq->seq.s));
+            reads.push_back(new_r);
+        }
+        else
+        {
+            Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
+                                   std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
+                                   get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
+            reads.push_back(new_r);
+        }
+
+        num++;
     }
 
     kseq_destroy(seq);
     gzclose(fp);
 
-   std::sort(reads.begin(), reads.end(), compare_read);
+    std::sort(reads.begin(), reads.end(), compare_read);
 
     return num;
 }
@@ -143,7 +146,7 @@ uint64_t encodeKmer(const std::string &str)
     return kmer[0] < kmer[1] ? kmer[0] : kmer[1];
 }
 
-bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParams &param)
+bloom_filter *loadHighFreqKMers(const char *kmer_freq_filename, struct algoParams &param)
 {
 
     std::ifstream idt(kmer_freq_filename);
@@ -152,16 +155,16 @@ bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParam
     int num = 0;
     int freq;
     while (idt >> kmer >> freq)
-            num++;
+        num++;
 
     // kmer length used for kmer counting and mapping must be consistent
     if (num > 0)
     {
-            if (kmer.length() != param.kmer_length)
-            {
-                fprintf(stderr, "ERROR: input list of k-mers and parameter k are inconsistent\n");
-                abort();
-            }
+        if (kmer.length() != param.kmer_length)
+        {
+            fprintf(stderr, "ERROR: input list of k-mers and parameter k are inconsistent\n");
+            abort();
+        }
     }
 
     // set up bloom filter
@@ -188,13 +191,14 @@ bloom_filter* loadHighFreqKMers(const char *kmer_freq_filename, struct algoParam
 void create_kmer_from_repetitive_reads(bloom_filter *kmer_filter, const char *repetitive_reads_filename, const algoParams &param)
 {
     int k = param.kmer_length;
-    uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1 ;
+    uint64_t shift1 = 2 * (k - 1), mask = (1ULL << 2 * k) - 1;
     int z = 0;
     std::ifstream idt(repetitive_reads_filename);
     std::string line1, line2;
     int added_kmers = 0;
 
-    while (getline(idt, line1) && getline(idt, line2)){
+    while (getline(idt, line1) && getline(idt, line2))
+    {
         uint64_t kmer[2] = {0, 0};
         line2.erase(std::remove(line2.begin(), line2.end(), '\n'), line2.end());
 
@@ -262,9 +266,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         int parts = read_length / interval_length;
 
         std::vector<int> initial_stars;
-        std::vector<int> final_stars1;
-        std::vector<int> final_stars2;
-        std::vector<int> final_stars3;
+        std::vector<int> final_stars;
 
         initial_stars.push_back(0);
 
@@ -272,60 +274,86 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         {
             initial_stars.push_back(j * interval_length);
         }
-
         initial_stars.push_back(read_length);
 
-        populateFinalStars(reads[i]->long_repeats1, initial_stars, final_stars1);
-        populateFinalStars(reads[i]->long_repeats2, final_stars1, final_stars2);
+        final_stars.push_back(initial_stars[0]);
 
-        if(final_stars3.size()==2){
+        int pos = 1;
+
+        for (int k = 0; k < reads[i]->long_repeats.size(); k++)
+        {
+            while (reads[i]->long_repeats[k].first > initial_stars[pos] and (pos < initial_stars.size() - 1))
+            {
+                final_stars.push_back(initial_stars[pos]);
+                pos++;
+            }
+            while (reads[i]->long_repeats[k].second >= initial_stars[pos] and (pos < initial_stars.size() - 1))
+            {
+                pos++;
+            }
+        }
+
+        while (pos < initial_stars.size())
+        {
+            final_stars.push_back(initial_stars[pos]);
+            pos++;
+        }
+
+        if (final_stars.size() == 2)
+        {
             if (!param.real_reads)
             {
                 reads_final << ">read=" << read_num << "," << align << ",position="
                             << start_pos << "-" << end_pos
                             << ",length=" << read_length
                             << read_name.substr(read_name.find_last_of(',')) << "\n";
-            }else{
+            }
+            else
+            {
                 reads_final << ">read=" << read_num << "," << read_name << "\n";
             }
 
-                reads_final << read_seq << "\n";
-                read_num++;
+            reads_final << read_seq << "\n";
+            read_num++;
         }
-        else {
-                for (int j = 0; j < final_stars3.size() - 2; j++)
-                {
+
+        else
+        {
+            for (int j = 0; j < final_stars.size() - 2; j++)
+            {
 
                 if (!param.real_reads)
                 {
                     if (align.compare("forward") == 0)
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + final_stars3[j] << "-"
-                                    << start_pos + final_stars3[j + 2]
-                                    << ",length=" << final_stars3[j + 2] - final_stars3[j]
+                                    << start_pos + final_stars[j] << "-"
+                                    << start_pos + final_stars[j + 2]
+                                    << ",length=" << final_stars[j + 2] - final_stars[j]
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                     else if (align.compare("reverse") == 0)
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - final_stars3[j + 2] << "-"
-                                    << end_pos - final_stars3[j]
-                                    << ",length=" << final_stars3[j + 2] - final_stars3[j]
+                                    << end_pos - final_stars[j + 2] << "-"
+                                    << end_pos - final_stars[j]
+                                    << ",length=" << final_stars[j + 2] - final_stars[j]
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
-                }else{
+                }
+                else
+                {
                     reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                reads_final << read_seq.substr(final_stars3[j], final_stars3[j + 2] - final_stars3[j]) << "\n";
+                reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
                 read_num++;
-                }
+            }
         }
     }
 }
 
-void break_long_reads(const char *readfilename, const char *kmer_freq_filename, const char *repeatreadsfilename, 
-    struct algoParams &param)
+void break_long_reads(const char *readfilename, const char *kmer_freq_filename, const char *repeatreadsfilename,
+                      struct algoParams &param)
 {
 
     std::ofstream reads_final("output_reads.fasta");
@@ -338,7 +366,7 @@ void break_long_reads(const char *readfilename, const char *kmer_freq_filename, 
 
     n_read = loadFASTA(readfilename, reads, umap, param);
 
-    bloom_filter* kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
+    bloom_filter *kmer_filter = loadHighFreqKMers(kmer_freq_filename, param);
 
     if (repeatreadsfilename)
         create_kmer_from_repetitive_reads(kmer_filter, repeatreadsfilename, param);
