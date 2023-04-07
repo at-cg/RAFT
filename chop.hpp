@@ -298,57 +298,37 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             final_stars.push_back(initial_stars[pos]);
             pos++;
         }
-
-        if (final_stars.size() == 2)
+        
+        for (int j = 0; j < final_stars.size() - 1; j++)
         {
+
             if (!param.real_reads)
             {
-                reads_final << ">read=" << read_num << "," << align << ",position="
-                            << start_pos << "-" << end_pos
-                            << ",length=" << read_length
-                            << read_name.substr(read_name.find_last_of(',')) << "\n";
+                if (align.compare("forward") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << start_pos + final_stars[j] << "-"
+                                << start_pos + final_stars[j + 1]
+                                << ",length=" << final_stars[j + 1] - final_stars[j]
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
+                else if (align.compare("reverse") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << end_pos - final_stars[j + 1] << "-"
+                                << end_pos - final_stars[j]
+                                << ",length=" << final_stars[j + 1] - final_stars[j]
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
             }
             else
             {
                 reads_final << ">read=" << read_num << "," << read_name << "\n";
             }
-
-            reads_final << read_seq << "\n";
+            reads_final << read_seq.substr(final_stars[j], final_stars[j + 1] - final_stars[j]) << "\n";
             read_num++;
         }
-
-        else
-        {
-            for (int j = 0; j < final_stars.size() - 2; j++)
-            {
-
-                if (!param.real_reads)
-                {
-                    if (align.compare("forward") == 0)
-                    {
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + final_stars[j] << "-"
-                                    << start_pos + final_stars[j + 2]
-                                    << ",length=" << final_stars[j + 2] - final_stars[j]
-                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
-                    }
-                    else if (align.compare("reverse") == 0)
-                    {
-                        reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - final_stars[j + 2] << "-"
-                                    << end_pos - final_stars[j]
-                                    << ",length=" << final_stars[j + 2] - final_stars[j]
-                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
-                    }
-                }
-                else
-                {
-                    reads_final << ">read=" << read_num << "," << read_name << "\n";
-                }
-                reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
-                read_num++;
-            }
-        }
+        
     }
 }
 
