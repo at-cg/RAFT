@@ -154,8 +154,9 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
     int num = 0;
     int check_sym_ovlp = 1;
     int saved_reads = 0;
+    int self_ovlp_saved_reads = 0;
 
-    Overlap *first_ovl = new Overlap();
+        Overlap *first_ovl = new Overlap();
 
     // int count_of_non_overlaps = 0;
     while (paf_read(fp, &r) >= 0)
@@ -218,12 +219,19 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 saved_reads++;
             }
 
+            if (!reads[new_ovl->read_A_id_]->save && new_ovl->read_A_id_== new_ovl->read_B_id_)
+            {
+                reads[new_ovl->read_A_id_]->save_overlap = 1;
+                self_ovlp_saved_reads++;
+            }
+
             num++;
     }
 
     fprintf(stdout, "INFO, Symmetric overlaps %d \n", param.symmetric_overlaps);
     fprintf(stdout, "INFO, length of alignments  %d()\n", num);
     fprintf(stdout, "INFO, Number of saved reads from overlaps %d \n", saved_reads);
+    fprintf(stdout, "INFO, Number of saved reads from self overlaps %d \n", self_ovlp_saved_reads);
 }
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
@@ -294,49 +302,34 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 pos++;
             }
 
-            if(final_stars.size()==2){
+            
+            for (int j=0; j < final_stars.size()-1; j++){
+
                 if (!param.real_reads)
                 {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << start_pos << "-" << end_pos
-                                << ",length=" << read_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                    if (align.compare("forward") == 0)
+                    {
+                        reads_final << ">read=" << read_num << "," << align << ",position="
+                                    << start_pos + final_stars[j] << "-"
+                                    << start_pos + final_stars[j + 1]
+                                    << ",length=" << final_stars[j + 1] - final_stars[j]
+                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
+                    }
+                    else if (align.compare("reverse") == 0)
+                    {
+                        reads_final << ">read=" << read_num << "," << align << ",position="
+                                    << end_pos - final_stars[j + 1] << "-"
+                                    << end_pos - final_stars[j]
+                                    << ",length=" << final_stars[j + 1] - final_stars[j]
+                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
+                    }
                 }else{
                     reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-
-                    reads_final << read_seq << "\n";
+                    reads_final << read_seq.substr(final_stars[j], final_stars[j + 1] - final_stars[j]) << "\n";
                     read_num++;
                 }
-
-            else {
-                for (int j=0; j < final_stars.size()-2; j++){
-
-                    if (!param.real_reads)
-                    {
-                        if (align.compare("forward") == 0)
-                        {
-                            reads_final << ">read=" << read_num << "," << align << ",position="
-                                        << start_pos + final_stars[j] << "-"
-                                        << start_pos + final_stars[j + 2]
-                                        << ",length=" << final_stars[j + 2] - final_stars[j]
-                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
-                        }
-                        else if (align.compare("reverse") == 0)
-                        {
-                            reads_final << ">read=" << read_num << "," << align << ",position="
-                                        << end_pos - final_stars[j + 2] << "-"
-                                        << end_pos - final_stars[j]
-                                        << ",length=" << final_stars[j + 2] - final_stars[j]
-                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
-                        }
-                    }else{
-                        reads_final << ">read=" << read_num << "," << read_name << "\n";
-                    }
-                        reads_final << read_seq.substr(final_stars[j], final_stars[j + 2] - final_stars[j]) << "\n";
-                        read_num++;
-                    }
-            }
+            
         }
     }
 }
