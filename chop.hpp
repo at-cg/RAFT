@@ -219,10 +219,11 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 saved_reads++;
             }
 
-            if (!reads[new_ovl->read_A_id_]->save && new_ovl->read_A_id_== new_ovl->read_B_id_)
+            if (!reads[new_ovl->read_A_id_]->save_overlap && new_ovl->read_A_id_ == new_ovl->read_B_id_)
             {
                 reads[new_ovl->read_A_id_]->save_overlap = 1;
                 self_ovlp_saved_reads++;
+                fprintf(stdout, "INFO, read id %d \n", new_ovl->read_A_id_);
             }
 
             num++;
