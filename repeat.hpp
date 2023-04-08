@@ -11,7 +11,7 @@
 
 #ifndef COMPARE_EVENT
 #define COMPARE_EVENT
-bool compare_event(std::tuple<int, int, double> event1, std::tuple<int, int, double> event2)
+bool compare_event(std::tuple<int, int> event1, std::tuple<int, int> event2)
 {
     return std::get<0>(event1) < std::get<0>(event2);
 }
@@ -45,16 +45,16 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
     }
 
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
-    std::vector<std::tuple<int, int, double>> events;
+    std::vector<std::pair<int, int>> events;
     for (int i = 0; i < alignments.size(); i++)
     {
         if (alignments[i]->read_A_id_ == read->id)
         {
-            events.push_back(std::tuple<int, int, double>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1, alignments[i]->identity));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1));
         }
         else if (!param.symmetric_overlaps && alignments[i]->read_B_id_ == read->id)
         {
-            events.push_back(std::tuple<int, int, double>(alignments[i]->read_B_match_start_, alignments[i]->read_B_match_end_ - 1, alignments[i]->identity));
+            events.push_back(std::pair<int, int>(alignments[i]->read_B_match_start_, alignments[i]->read_B_match_end_ - 1));
         }
     }
 
@@ -70,9 +70,6 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
             while (std::get<1>(events[pos]) >= k * reso)
             {
                 std::get<1>(coverage[k])++;
-                if(!param.symmetric_overlaps && std::get<2>(events[pos])<=0.98){
-                    std::get<2>(coverage[k])++;
-                }
                 k++;
             }
             pos++;
@@ -121,7 +118,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             total_low_idn_coverage = total_low_idn_coverage + std::get<2>(coverage[j]);
             total_windows++;
 
-            if (std::get<1>(coverage[j]) >= high_cov || std::get<2>(coverage[j]))
+            if (std::get<1>(coverage[j]) >= high_cov)
             {
                 end = std::get<0>(coverage[j]) + param.reso;
             }

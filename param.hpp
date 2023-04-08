@@ -20,8 +20,8 @@
         est_cov = 0;
         cov_mul = 1.5;
         repeat_length = 50;
-        interval_length = 20000;
-        flanking_length = 1005;
+        interval_length = 10000;
+        flanking_length = 1000;
         flanking_frac = 1.0;
         outputfilename = "chopper";
         real_reads = 1;
