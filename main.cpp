@@ -11,8 +11,10 @@ void printHelp(const algoParams &params)
     std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
     std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
     std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
-    std::cout << "  -v NUM     interval_length " << params.interval_length << "\n";
-    std::cout << "  -u NUM     flanking_length " << params.flanking_length << "\n";
+    std::cout << "  -i NUM     interval_length " << params.interval_length << "\n";
+    std::cout << "  -d NUM     read_length " << params.read_length << "\n";
+    std::cout << "  -f NUM     flanking_length " << params.flanking_length << "\n";
+    std::cout << "  -g NUM     flanking_frac " << params.flanking_frac << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
      exit(1);
 }
@@ -24,7 +26,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:i:f:g:o:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:i:d:f:g:o:")) != -1)
     {
         switch (option)
         {
@@ -42,6 +44,9 @@ int main(int argc, char *argv[])
             break;
         case 'i':
             params.interval_length = atoi(optarg);
+            break;
+        case 'd':
+            params.read_length = atoi(optarg);
             break;
         case 'f':
             params.flanking_length = atoi(optarg);

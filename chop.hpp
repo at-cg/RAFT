@@ -315,7 +315,9 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             }
             else{
 
-                int fragments = 1 + (final_stars.size()-3)/2;
+                int div = param.read_length/param.interval_length;
+
+                int fragments = 1 + (final_stars.size()-(div+1))/div;
                 int pos=0;
 
                 for (int j=1; j < fragments; j++){
