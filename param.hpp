@@ -23,7 +23,7 @@
         repeat_length = 50;
         interval_length = 10000;
         read_length = 20000;
-        flanking_length = 1000;
+        flanking_length = 2000;
         flanking_frac = 1.0;
         outputfilename = "chopper";
         real_reads = 1;
