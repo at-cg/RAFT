@@ -225,7 +225,6 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
     fprintf(stdout, "INFO, Symmetric overlaps %d \n", param.symmetric_overlaps);
     fprintf(stdout, "INFO, length of alignments  %d()\n", num);
     fprintf(stdout, "INFO, Number of saved reads from overlaps %d \n", saved_reads);
-    fprintf(stdout, "INFO, Number of saved reads from self overlaps %d \n", self_ovlp_saved_reads);
 }
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
@@ -320,10 +319,8 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 int fragments = 1 + (final_stars.size()-2)/div;
                 int pos=0;
 
-                for (int j=1; j < fragments; j++){
-
-                    if (!param.real_reads)
-                    {
+                if (!param.real_reads)
+                {
                         if (align.compare("forward") == 0)
                         {
                             reads_final << ">read=" << read_num << "," << align << ",position="
@@ -340,10 +337,39 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                                         << ",length=" << final_stars[pos + 2] - final_stars[pos]
                                         << read_name.substr(read_name.find_last_of(',')) << "\n";
                         }
+                }
+                else
+                {
+                        reads_final << ">read=" << read_num << "," << read_name << "\n";
+                }
+                reads_final << read_seq.substr(final_stars[pos], final_stars[pos + 2] - final_stars[pos]) << "\n";
+                read_num++;
+                pos = pos + 2;
+
+                for (int j=2; j < fragments; j++){
+
+                    if (!param.real_reads)
+                    {
+                       if (align.compare("forward") == 0)
+                        {
+                            reads_final << ">read=" << read_num << "," << align << ",position="
+                                        << start_pos + final_stars[pos] - 500 << "-"
+                                        << start_pos + final_stars[pos + 2]
+                                        << ",length=" << final_stars[pos + 2] - final_stars[pos] + 500
+                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        }
+                        else if (align.compare("reverse") == 0)
+                        {
+                            reads_final << ">read=" << read_num << "," << align << ",position="
+                                        << end_pos - final_stars[pos + 2] << "-"
+                                        << end_pos - final_stars[pos] + 500
+                                        << ",length=" << final_stars[pos + 2] - final_stars[pos] + 500
+                                        << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        }
                     } else{
                         reads_final << ">read=" << read_num << "," << read_name << "\n";
                     }
-                        reads_final << read_seq.substr(final_stars[pos], final_stars[pos + 2] - final_stars[pos]) << "\n";
+                        reads_final << read_seq.substr(final_stars[pos] - 500, final_stars[pos + 2] - final_stars[pos] + 500) << "\n";
                         read_num++;
                         pos = pos + 2;
                 }
@@ -353,17 +379,17 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                         if (align.compare("forward") == 0)
                         {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << start_pos + final_stars[pos] << "-"
+                                    << start_pos + final_stars[pos] - 500 << "-"
                                     << start_pos + final_stars.back()
-                                    << ",length=" << final_stars.back() - final_stars[pos]
+                                    << ",length=" << final_stars.back() - final_stars[pos] + 500
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                         }
                         else if (align.compare("reverse") == 0)
                         {
                         reads_final << ">read=" << read_num << "," << align << ",position="
                                     << end_pos - final_stars.back() << "-"
-                                    << end_pos - final_stars[pos]
-                                    << ",length=" << final_stars.back() - final_stars[pos]
+                                    << end_pos - final_stars[pos] + 500
+                                    << ",length=" << final_stars.back() - final_stars[pos] + 500
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                         }
                 }
@@ -371,7 +397,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 {
                         reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                reads_final << read_seq.substr(final_stars[pos], final_stars.back() - final_stars[pos]) << "\n";
+                reads_final << read_seq.substr(final_stars[pos] - 500, final_stars.back() - final_stars[pos]+ 500) << "\n";
                 read_num++;
             }
         }
