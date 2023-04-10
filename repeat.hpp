@@ -126,11 +126,10 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             {
                 if ((end - start) >= param.repeat_length)
                 {
-                    int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
                     total_repeat_length = total_repeat_length + end - start;
-
-                    s = start - flanking_length;
-                    e = end + flanking_length;
+                    
+                    s = start - param.flanking_length;
+                    e = end + param.flanking_length;
 
                     if (s <= 0)
                     {
@@ -153,11 +152,10 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
 
         if ((end - start) >= param.repeat_length)
         {
-            int flanking_length = std::min(param.flanking_frac * (end - start), float(param.flanking_length));
             total_repeat_length = total_repeat_length + end - start;
 
-            s = start - flanking_length;
-            e = end + flanking_length;
+            s = start - param.flanking_length;
+            e = end + param.flanking_length;
 
             if (s <= 0)
             {
