@@ -183,7 +183,6 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
             idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
             if (new_ovl->read_A_id_ != new_ovl->read_B_id_ && !param.symmetric_overlaps)
             {
-                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
                 idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
             }
 
