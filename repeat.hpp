@@ -25,7 +25,7 @@ bool compare_start_repeat(std::pair<int, int> repeat1, std::pair<int, int> repea
 }
 #endif
 
-void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<int, int, int>> &coverage, Read *read,
+void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<int, int>> &coverage, Read *read,
     const algoParams &param)
 {
     int reso = param.reso;
@@ -38,10 +38,9 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
 
     for (int i = 0; i < intervals; i++)
     {
-        coverage.push_back(std::tuple<int, int, int>());
+        coverage.push_back(std::tuple<int, int>());
         std::get<0>(coverage[i]) = i * reso;
         std::get<1>(coverage[i]) = 0;
-        std::get<2>(coverage[i]) = 0;
     }
 
     // Returns coverage, which is a pair of ints <i*reso, coverage at position i*reso of read a>
@@ -100,12 +99,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
     for (int i = 0; i < n_read; i++)
     {
         total_read_length = total_read_length + reads[i]->len;
-        std::vector<std::tuple<int, int, int>> coverage;
+        std::vector<std::tuple<int, int>> coverage;
         profileCoverage(idx_pileup[i], coverage, reads[i], param);
 
         cov << "read " << i << " ";
         for (int j = 0; j < coverage.size(); j++)
-            cov << std::get<0>(coverage[j]) << "," << std::get<1>(coverage[j]) << "," << std::get<2>(coverage[j]) << " ";
+            cov << std::get<0>(coverage[j]) << "," << std::get<1>(coverage[j]) << " ";
         cov << std::endl;
 
         // get the longest consecutive region that has high coverage, high coverage = estimated coverage * 1.5
@@ -115,7 +114,6 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
         for (int j = 0; j < coverage.size(); j++)
         {
             total_coverage = total_coverage + std::get<1>(coverage[j]);
-            total_low_idn_coverage = total_low_idn_coverage + std::get<2>(coverage[j]);
             total_windows++;
 
             if (std::get<1>(coverage[j]) >= high_cov)
@@ -175,13 +173,10 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
     }
 
     double coverage_per_window = (double)total_coverage / total_windows;
-    double low_idn_coverage_per_window = (double)total_low_idn_coverage / total_windows;
     double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
 
     fprintf(stdout, "coverage per window is %f \n", coverage_per_window);
     fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window/cov_est);
-    fprintf(stdout, "low idn coverage per window is %f \n", low_idn_coverage_per_window);
-    fprintf(stdout, "low idn coverage per window/average coverage is %f \n", low_idn_coverage_per_window / cov_est);
     fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
 
     for (int i = 0; i < n_read; i++)

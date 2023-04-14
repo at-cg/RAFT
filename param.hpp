@@ -39,7 +39,8 @@
         std::cout << "INFO, printParams(), interval_length = " << interval_length << "\n";
         std::cout << "INFO, printParams(), read_length = " << read_length << "\n";
         std::cout << "INFO, printParams(), overlap_length = " << overlap_length << "\n";
-        std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";    }
+        std::cout << "INFO, printParams(), flanking_length = " << flanking_length << "\n";
+    }
 };
 
 #endif

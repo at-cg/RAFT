@@ -152,9 +152,8 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
     paf_rec_t r;
     fp = paf_open(paffilename);
     int num = 0;
-    int check_sym_ovlp = 1;
-    int saved_reads = 0;
-    int self_ovlp_saved_reads = 0;
+    int check_sym_ovlp = 0;
+    if (!param.symmetric_overlaps) check_sym_ovlp = 1;
 
         Overlap *first_ovl = new Overlap();
 
@@ -181,13 +180,8 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
             }
 
-            new_ovl->identity = double(r.ml)/r.bl;
-
-            if (new_ovl->read_A_id_ == new_ovl->read_B_id_)
-            {
-                idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
-            }
-            else
+            idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
+            if (new_ovl->read_A_id_ != new_ovl->read_B_id_ && !param.symmetric_overlaps)
             {
                 idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
                 idx_pileup[new_ovl->read_B_id_].push_back(new_ovl);
@@ -208,23 +202,11 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
                 check_sym_ovlp=0;
             }
 
-            if (reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_B_id_]->save && !reads[new_ovl->read_B_id_]->save_overlap)
-            {
-                reads[new_ovl->read_B_id_]->save_overlap=1;
-                saved_reads++;
-            }
-            else if (!reads[new_ovl->read_A_id_]->save && !reads[new_ovl->read_A_id_]->save_overlap && reads[new_ovl->read_B_id_]->save)
-            {
-                reads[new_ovl->read_A_id_]->save_overlap = 1;
-                saved_reads++;
-            }
-
             num++;
     }
 
     fprintf(stdout, "INFO, Symmetric overlaps %d \n", param.symmetric_overlaps);
     fprintf(stdout, "INFO, length of alignments  %d()\n", num);
-    fprintf(stdout, "INFO, Number of saved reads from overlaps %d \n", saved_reads);
 }
 
 void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads, std::ofstream &reads_final)
