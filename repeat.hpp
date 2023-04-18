@@ -63,7 +63,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
     int i = 0;
     while (pos < events.size())
     {
-        while ((std::get<0>(events[pos]) < (i + 1) * reso) and (pos < events.size()))
+        while ((pos < events.size()) and (std::get<0>(events[pos]) < (i + 1) * reso))
         {
             int k = i;
             while (std::get<1>(events[pos]) >= k * reso)
@@ -143,7 +143,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
                     
                 }
 
-                start = std::get<0>(coverage[j + 1]);
+                start = std::get<0>(coverage[j]) + param.reso;
                 end = start;
             }
         }

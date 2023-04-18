@@ -155,7 +155,7 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
     int check_sym_ovlp = 0;
     if (!param.symmetric_overlaps) check_sym_ovlp = 1;
 
-        Overlap *first_ovl = new Overlap();
+    Overlap *first_ovl = new Overlap();
 
     // int count_of_non_overlaps = 0;
     while (paf_read(fp, &r) >= 0)
