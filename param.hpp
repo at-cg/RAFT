@@ -20,11 +20,11 @@
         reso = 50;
         est_cov = 0;
         cov_mul = 1.5;
-        repeat_length = 1000;
+        repeat_length = 10000;
         interval_length = 10000;
         read_length = 20000;
         overlap_length = 500;
-        flanking_length = 2000;
+        flanking_length = 1000;
         outputfilename = "chopper";
         real_reads = 1;
         symmetric_overlaps = 0;
