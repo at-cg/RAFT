@@ -357,34 +357,30 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
                 int final_start_pos = final_stars[pos];
 
-                if (final_stars.back() - final_stars[pos]<param.read_length){
-                    final_start_pos = final_stars.back()-param.read_length;
-                }
-
                 if (!param.real_reads)
                 {
                     if (align.compare("forward") == 0)
                     {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << start_pos + final_start_pos << "-"
-                                << start_pos + final_stars.back()
-                                << ",length=" << final_stars.back() - final_start_pos
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        reads_final << ">read=" << read_num << "," << align << ",position="
+                                    << start_pos + final_stars[pos] - param.overlap_length << "-"
+                                    << start_pos + final_stars.back()
+                                    << ",length=" << final_stars.back() - final_stars[pos] + param.overlap_length
+                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                     else if (align.compare("reverse") == 0)
                     {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << end_pos - final_stars.back() << "-"
-                                << end_pos - final_start_pos
-                                << ",length=" << final_stars.back() - final_start_pos
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                        reads_final << ">read=" << read_num << "," << align << ",position="
+                                    << end_pos - final_stars.back() << "-"
+                                    << end_pos - final_stars[pos] + param.overlap_length
+                                    << ",length=" << final_stars.back() - final_stars[pos] + param.overlap_length
+                                    << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                 }
                 else
                 {
                         reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                reads_final << read_seq.substr(final_start_pos, final_stars.back() - final_start_pos) << "\n";
+                reads_final << read_seq.substr(final_stars[pos] - param.overlap_length, final_stars.back() - final_stars[pos] + param.overlap_length) << "\n";
                 read_num++;
             }
         }
@@ -414,6 +410,8 @@ void break_long_reads(const char *readfilename, const char *paffilename, const c
     }
 
     create_pileup(paffilename, reads, idx_pileup, umap, param);
+
+    umap.clear();
 
     repeat_annotate(reads, idx_pileup, param);
 
