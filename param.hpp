@@ -1,7 +1,7 @@
 #ifndef PARAM_CHOPPER_H
 #define PARAM_CHOPPER_H
 
-    struct algoParams
+struct algoParams
 {
     int reso;
     int est_cov;

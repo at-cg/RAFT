@@ -209,7 +209,7 @@ typedef struct __kstring_t
         int last_char;                      \
         kstream_t *f;                       \
     } kseq_t;
-    
+
 #define kseq_rewind(ks) ((ks)->last_char = (ks)->f->is_eof = (ks)->f->begin = (ks)->f->end = 0)
 
 #define __KSEQ_BASIC(SCOPE, type_t)                      \

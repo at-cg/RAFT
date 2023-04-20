@@ -86,7 +86,7 @@ int paf_parse(int l, char *s, paf_rec_t *pr) // s must be NULL terminated
     return 0;
 }
 
-int paf_read(paf_file_t * pf, paf_rec_t * r)
+int paf_read(paf_file_t *pf, paf_rec_t *r)
 {
     int ret;
 file_read_more:

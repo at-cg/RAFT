@@ -26,7 +26,7 @@ bool compare_start_repeat(std::pair<int, int> repeat1, std::pair<int, int> repea
 #endif
 
 void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<int, int>> &coverage, Read *read,
-    const algoParams &param)
+                     const algoParams &param)
 {
     int reso = param.reso;
     int intervals = read->len / reso;
@@ -49,7 +49,7 @@ void profileCoverage(std::vector<Overlap *> &alignments, std::vector<std::tuple<
     {
         if (alignments[i]->read_A_id_ == read->id)
         {
-            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_ , alignments[i]->read_A_match_end_ - 1));
+            events.push_back(std::pair<int, int>(alignments[i]->read_A_match_start_, alignments[i]->read_A_match_end_ - 1));
         }
         else if (!param.symmetric_overlaps && alignments[i]->read_B_id_ == read->id)
         {
@@ -85,7 +85,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
     std::ofstream cov(param.outputfilename + ".coverage.txt");
     std::ofstream long_repeats(param.outputfilename + ".long_repeats.txt");
     std::ofstream long_repeats_bed(param.outputfilename + ".long_repeats.bed");
- 
+
     int cov_est = param.est_cov;
     int high_cov = cov_est * param.cov_mul;
     fprintf(stdout, "high_cov %d\n", high_cov);
@@ -93,8 +93,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
     long long total_coverage = 0;
     long long total_low_idn_coverage = 0;
     int total_windows = 0;
-    long long total_repeat_length =0;
-    long long total_read_length=0;
+    long long total_repeat_length = 0;
+    long long total_read_length = 0;
 
     for (int i = 0; i < n_read; i++)
     {
@@ -125,7 +125,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
                 if ((end - start) >= param.repeat_length)
                 {
                     total_repeat_length = total_repeat_length + end - start;
-                    
+
                     s = start - param.flanking_length;
                     e = end + param.flanking_length;
 
@@ -134,13 +134,12 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
                         s = 0;
                     }
 
-                    if ( e >= reads[i]->len)
+                    if (e >= reads[i]->len)
                     {
                         e = reads[i]->len;
                     }
 
                     reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
-                    
                 }
 
                 start = std::get<0>(coverage[j]) + param.reso;
@@ -164,9 +163,8 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
             {
                 e = reads[i]->len;
             }
- 
+
             reads[i]->long_repeats.push_back(std::pair<int, int>(s, e));
-            
         }
 
         std::sort(reads[i]->long_repeats.begin(), reads[i]->long_repeats.end(), compare_start_repeat);
@@ -176,7 +174,7 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
     double fraction_of_repeat_length = (double)total_repeat_length / total_read_length;
 
     fprintf(stdout, "coverage per window is %f \n", coverage_per_window);
-    fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window/cov_est);
+    fprintf(stdout, "coverage per window/average coverage is %f \n", coverage_per_window / cov_est);
     fprintf(stdout, "fraction_of_repeat_length %f \n", fraction_of_repeat_length);
 
     for (int i = 0; i < n_read; i++)
@@ -185,12 +183,13 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
         for (int j = 0; j < reads[i]->long_repeats.size(); j++)
         {
             long_repeats << reads[i]->long_repeats[j].first << "," << reads[i]->long_repeats[j].second << "    ";
-            
-            if(!param.real_reads){
+
+            if (!param.real_reads)
+            {
                 if (reads[i]->align.compare("forward") == 0)
                 {
                     long_repeats_bed << reads[i]->chr << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].first
-                                    << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].second << std::endl;
+                                     << "\t" << reads[i]->start_pos + reads[i]->long_repeats[j].second << std::endl;
                 }
                 else if (reads[i]->align.compare("reverse") == 0)
                 {
@@ -202,5 +201,4 @@ void repeat_annotate(std::vector<Read *> reads, std::vector<std::vector<Overlap 
 
         long_repeats << std::endl;
     }
-
 }

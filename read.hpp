@@ -10,7 +10,6 @@ typedef std::pair<int, int> Interval;
 class Read
 { // read class
 public:
-
     int id;            // id, start from 0
     std::string name;  // read name
     std::string bases; // read bases
