@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:i:d:v:f:o:s:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:i:d:v:f:o:s")) != -1)
     {
         switch (option)
         {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
             params.outputfilename = optarg;
             break;
         case 's':
-            params.symmetric_overlaps = atoi(optarg);
+            params.symmetric_overlaps = 1;
             break;
         default:
             printHelp(params);
