@@ -274,11 +274,17 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             int fragments = 1 + (final_stars.size() - 2) / div;
             int pos = 0;
 
-            for (int j = 1; j <= fragments - 2; j++)
+            for (int j = 1; j <= fragments; j++)
             {
                 int overlap_length = param.overlap_length;
-                if(pos==0){
+                if(j==1){
                     overlap_length=0;
+                }
+
+                int last_pos = final_stars[pos + div];
+                if (j==fragments)
+                {
+                    last_pos = final_stars.back();
                 }
 
                 if (!param.real_reads)
@@ -287,16 +293,16 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
                                     << start_pos + final_stars[pos] - overlap_length << "-"
-                                    << start_pos + final_stars[pos + div]
-                                    << ",length=" << final_stars[pos + div] - final_stars[pos] + overlap_length
+                                    << start_pos + last_pos
+                                    << ",length=" << last_pos - final_stars[pos] + overlap_length
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                     else if (align.compare("reverse") == 0)
                     {
                         reads_final << ">read=" << read_num << "," << align << ",position="
-                                    << end_pos - final_stars[pos + div] << "-"
+                                    << end_pos - last_pos << "-"
                                     << end_pos - final_stars[pos] + overlap_length
-                                    << ",length=" << final_stars[pos + div] - final_stars[pos] + overlap_length
+                                    << ",length=" << last_pos - final_stars[pos] + overlap_length
                                     << read_name.substr(read_name.find_last_of(',')) << "\n";
                     }
                 }
@@ -304,69 +310,10 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 {
                     reads_final << ">read=" << read_num << "," << read_name << "\n";
                 }
-                reads_final << read_seq.substr(final_stars[pos] - overlap_length, final_stars[pos + div] - final_stars[pos] + overlap_length) << "\n";
+                reads_final << read_seq.substr(final_stars[pos] - overlap_length, last_pos - final_stars[pos] + overlap_length) << "\n";
                 read_num++;
                 pos = pos + div;
             }
-
-            int midpoint = final_stars[pos] + (final_stars.back() - final_stars[pos]) / 2;
-            int overlap_length = param.overlap_length;
-            if (pos == 0)
-            {
-                overlap_length = 0;
-            }
-
-            if (!param.real_reads)
-            {
-                if (align.compare("forward") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << start_pos + final_stars[pos] - overlap_length << "-"
-                                << start_pos + midpoint
-                                << ",length=" << midpoint - final_stars[pos] + overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-                else if (align.compare("reverse") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << end_pos - midpoint << "-"
-                                << end_pos - final_stars[pos] + overlap_length
-                                << ",length=" << midpoint - final_stars[pos] + overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-            }
-            else
-            {
-                reads_final << ">read=" << read_num << "," << read_name << "\n";
-            }
-            reads_final << read_seq.substr(final_stars[pos] - overlap_length, midpoint - final_stars[pos] + overlap_length) << "\n";
-            read_num++;
-
-            if (!param.real_reads)
-            {
-                if (align.compare("forward") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << start_pos + midpoint - param.overlap_length << "-"
-                                << start_pos + final_stars.back()
-                                << ",length=" << final_stars.back() - midpoint + param.overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-                else if (align.compare("reverse") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << end_pos - final_stars.back() << "-"
-                                << end_pos - midpoint + param.overlap_length
-                                << ",length=" << final_stars.back() - midpoint + param.overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-            }
-            else
-            {
-                reads_final << ">read=" << read_num << "," << read_name << "\n";
-            }
-            reads_final << read_seq.substr(midpoint - param.overlap_length, final_stars.back() - midpoint + param.overlap_length) << "\n";
-            read_num++;
         }
     }
 }
