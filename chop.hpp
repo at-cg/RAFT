@@ -104,18 +104,20 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
             }
             fprintf(stdout, "Real Reads %d \n", param.real_reads);
         }
+
+        int read_id = addStringToMap(std::string(seq->name.s), umap);
+
         if (param.real_reads)
         {
-            int read_id = addStringToMap(std::string(seq->name.s), umap);
             Read *new_r = new Read(read_id, strlen(seq->seq.s), std::string(seq->name.s),
                                    std::string(seq->seq.s));
             reads.push_back(new_r);
         }
         else
         {
-            Read *new_r = new Read(get_id_from_string(seq->name.s) - 1, strlen(seq->seq.s), std::string(seq->name.s),
-                                   std::string(seq->seq.s), get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
-                                   get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
+            Read *new_r = new Read(read_id, strlen(seq->seq.s), std::string(seq->name.s), std::string(seq->seq.s), 
+                            get_start_pos_from_string(seq->name.s), get_end_pos_from_string(seq->name.s),
+                            get_alignment_from_string(seq->name.s), get_chr_from_string(seq->name.s));
             reads.push_back(new_r);
         }
 
@@ -124,9 +126,6 @@ int loadFASTA(const char *fn, std::vector<Read *> &reads, std::unordered_map<std
 
     kseq_destroy(seq);
     gzclose(fp);
-
-    if (!param.real_reads)
-        std::sort(reads.begin(), reads.end(), compare_read);
 
     return num;
 }
@@ -159,17 +158,10 @@ void create_pileup(const char *paffilename, std::vector<Read *> &reads, std::vec
         new_ovl->read_B_match_start_ = r.ts;
         new_ovl->read_A_match_end_ = r.qe;
         new_ovl->read_B_match_end_ = r.te;
-        if (param.real_reads)
-        {
-            new_ovl->read_A_id_ = addStringToMap(std::string(r.qn), umap);
-            new_ovl->read_B_id_ = addStringToMap(std::string(r.tn), umap);
-        }
-        else
-        {
-            new_ovl->read_A_id_ = get_id_from_string(r.qn) - 1;
-            new_ovl->read_B_id_ = get_id_from_string(r.tn) - 1;
-        }
 
+        new_ovl->read_A_id_ = addStringToMap(std::string(r.qn), umap);
+        new_ovl->read_B_id_ = addStringToMap(std::string(r.tn), umap);
+        
         idx_pileup[new_ovl->read_A_id_].push_back(new_ovl);
         if (new_ovl->read_A_id_ != new_ovl->read_B_id_ && !param.symmetric_overlaps)
         {
