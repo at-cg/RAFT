@@ -264,10 +264,11 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         else
         {
             int fragments = 1 + (final_stars.size() - (div+1)) / div;
-            if ((final_stars.size() - (div + 1)) % div){
+            
+            if ((final_stars.size() - (div + 1)) % div >= (div/2)){
                 fragments ++;
             }
-            
+
                 int pos = 0;
 
             for (int j = 1; j <= fragments; j++)
