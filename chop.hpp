@@ -264,14 +264,16 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
         else
         {
             int fragments = 1 + (final_stars.size() - (div+1)) / div;
-            
-            if ((final_stars.size() - (div + 1)) % div >= (div/2)){
+
+            int remaining_markers = (final_stars.size() - (div + 1)) % div;
+
+            if ( remaining_markers ){
                 fragments ++;
             }
 
-                int pos = 0;
+            int pos = 0;
 
-            for (int j = 1; j <= fragments; j++)
+            for (int j = 1; j <= fragments-2; j++)
             {
                 int overlap_length = param.overlap_length;
                 if(j==1){
@@ -311,6 +313,67 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 read_num++;
                 pos = pos + div;
             }
+
+            int overlap_length = param.overlap_length;
+
+            if (pos == 0)
+            {
+                overlap_length = 0;
+            }
+
+            int midmarker = (div+remaining_markers)/2;
+
+            if (!param.real_reads)
+            {
+                if (align.compare("forward") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << start_pos + final_stars[pos] - overlap_length << "-"
+                                << start_pos + final_stars[pos + midmarker]
+                                << ",length=" << final_stars[pos + midmarker] - final_stars[pos] + overlap_length
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
+                else if (align.compare("reverse") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << end_pos - final_stars[pos + midmarker] << "-"
+                                << end_pos - final_stars[pos] + overlap_length
+                                << ",length=" << final_stars[pos + midmarker] - final_stars[pos] + overlap_length
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
+            }
+            else
+            {
+                reads_final << ">read=" << read_num << "," << read_name << "\n";
+            }
+            reads_final << read_seq.substr(final_stars[pos] - overlap_length, final_stars[pos + midmarker] - final_stars[pos] + overlap_length) << "\n";
+            read_num++;
+
+            if (!param.real_reads)
+            {
+                if (align.compare("forward") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << start_pos + final_stars[pos + midmarker] - param.overlap_length << "-"
+                                << start_pos + final_stars.back()
+                                << ",length=" << final_stars.back() - final_stars[pos + midmarker] + param.overlap_length
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
+                else if (align.compare("reverse") == 0)
+                {
+                    reads_final << ">read=" << read_num << "," << align << ",position="
+                                << end_pos - final_stars.back() << "-"
+                                << end_pos - final_stars[pos + midmarker] + param.overlap_length
+                                << ",length=" << final_stars.back() - final_stars[pos + midmarker] + param.overlap_length
+                                << read_name.substr(read_name.find_last_of(',')) << "\n";
+                }
+            }
+            else
+            {
+                reads_final << ">read=" << read_num << "," << read_name << "\n";
+            }
+            reads_final << read_seq.substr(final_stars[pos + midmarker] - param.overlap_length, final_stars.back() - final_stars[pos + midmarker] + param.overlap_length) << "\n";
+            read_num++;
         }
     }
 }
