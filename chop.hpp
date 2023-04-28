@@ -213,14 +213,17 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
         initial_stars.push_back(0);
 
-        for (int j = 1; j < parts; j++)
+        for (int j = 1; j <= parts; j++)
         {
             initial_stars.push_back(j * interval_length);
         }
-        initial_stars.push_back(read_length);
+        if (read_length % param.interval_length)
+        {
+            initial_stars.push_back(read_length);
+        }
 
         final_stars.push_back(initial_stars[0]);
-
+        
         int pos = 1;
 
         for (int k = 0; k < reads[i]->long_repeats.size(); k++)
@@ -267,13 +270,13 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 
             int remaining_markers = (final_stars.size() - (div + 1)) % div;
 
-            if ( remaining_markers ){
+            if (remaining_markers){
                 fragments ++;
             }
 
             int pos = 0;
 
-            for (int j = 1; j <= fragments-1; j++)
+            for (int j = 1; j <= fragments; j++)
             {
                 int overlap_length = param.overlap_length;
                 if(j==1){
@@ -313,46 +316,6 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 read_num++;
                 pos = pos + div;
             }
-
-            int overlap_length = param.overlap_length;
-            int starting_position = final_stars[pos];
-
-            if (pos == 0)
-            {
-                overlap_length = 0;
-            }
-
-            if (pos != 0 && final_stars.back() - final_stars[pos] < param.read_length)
-            {
-                starting_position = final_stars.back()-param.read_length;
-            }
-
-
-            if (!param.real_reads)
-            {
-                if (align.compare("forward") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << start_pos + starting_position - overlap_length << "-"
-                                << start_pos + final_stars.back()
-                                << ",length=" << final_stars.back() - starting_position + overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-                else if (align.compare("reverse") == 0)
-                {
-                    reads_final << ">read=" << read_num << "," << align << ",position="
-                                << end_pos - final_stars.back() << "-"
-                                << end_pos - starting_position + overlap_length
-                                << ",length=" << final_stars.back() - starting_position + overlap_length
-                                << read_name.substr(read_name.find_last_of(',')) << "\n";
-                }
-            }
-            else
-            {
-                reads_final << ">read=" << read_num << "," << read_name << "\n";
-            }
-            reads_final << read_seq.substr(starting_position - overlap_length, final_stars.back() - starting_position + overlap_length) << "\n";
-            read_num++;
         }
     }
 }

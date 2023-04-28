@@ -10,13 +10,9 @@ void printHelp(const algoParams &params)
     std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
     std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
     std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
-    std::cout << "  -l NUM     repeat_length " << params.repeat_length << "\n";
-    std::cout << "  -i NUM     interval_length " << params.interval_length << "\n";
-    std::cout << "  -d NUM     read_length " << params.read_length << "\n";
+    std::cout << "  -l NUM     read_length " << params.read_length << "\n";
     std::cout << "  -v NUM     overlap_length " << params.overlap_length << "\n";
-    std::cout << "  -f NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
-    std::cout << "  -s BOOL    symmetric_overlaps " << params.symmetric_overlaps << "\n";
     exit(1);
 }
 
@@ -27,7 +23,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:i:d:v:f:o:s")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:v:o:")) != -1)
     {
         switch (option)
         {
@@ -41,25 +37,16 @@ int main(int argc, char *argv[])
             params.cov_mul = std::stod(optarg);
             break;
         case 'l':
-            params.repeat_length = atoi(optarg);
-            break;
-        case 'i':
-            params.interval_length = atoi(optarg);
-            break;
-        case 'd':
             params.read_length = atoi(optarg);
+            params.repeat_length = params.read_length/2;
+            params.interval_length = params.read_length/2;
             break;
         case 'v':
             params.overlap_length = atoi(optarg);
-            break;
-        case 'f':
-            params.flanking_length = atoi(optarg);
+            params.flanking_length = params.overlap_length*2;
             break;
         case 'o':
             params.outputfilename = optarg;
-            break;
-        case 's':
-            params.symmetric_overlaps = 1;
             break;
         default:
             printHelp(params);
