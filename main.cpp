@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     params.initParams();
     int option;
 
-    while ((option = getopt(argc, argv, "r:e:m:l:p:v:o:")) != -1)
+    while ((option = getopt(argc, argv, "r:e:m:l:i:p:f:v:o:")) != -1)
     {
         switch (option)
         {
@@ -38,15 +38,18 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             params.read_length = atoi(optarg);
-            params.interval_length = params.read_length/2;
+            break;
+        case 'i':
+            params.interval_length = atoi(optarg);
             break;
         case 'p':
             params.repeat_length = atoi(optarg);
             break;
+        case 'f':
+            params.flanking_length = atoi(optarg);
+            break;
         case 'v':
             params.overlap_length = atoi(optarg);
-            params.flanking_length = params.overlap_length*2;
-            break;
         case 'o':
             params.outputfilename = optarg;
             break;
