@@ -2,5 +2,6 @@
 *.txt
 *.fasta*
 *.bed
-chopper*
+chopper
 .*
+*.dSYM
