@@ -12,6 +12,8 @@ void printHelp(const algoParams &params)
     std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
     std::cout << "  -l NUM     read_length " << params.read_length << "\n";
     std::cout << "  -v NUM     overlap_length " << params.overlap_length << "\n";
+    std::cout << "  -p NUM     repeat_length " << params.repeat_length << "\n";
+    std::cout << "  -f NUM     flanking_length " << params.flanking_length << "\n";
     std::cout << "  -o FILE    prefix of output files " << params.outputfilename << "\n";
     exit(1);
 }
@@ -39,11 +41,9 @@ int main(int argc, char *argv[])
         case 'l':
             params.read_length = atoi(optarg);
             break;
-        case 'i':
-            params.interval_length = atoi(optarg);
-            break;
         case 'p':
             params.repeat_length = atoi(optarg);
+            params.interval_length = atoi(optarg);
             break;
         case 'f':
             params.flanking_length = atoi(optarg);
