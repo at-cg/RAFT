@@ -1,10 +1,12 @@
-EXE=$SCRATCH/code/chopper3/chopper/chopper
-READS=$SCRATCH/data/simulated_reads/human_diploid_30x_hifiasm.trio.0.16.1_hifi/reads.fasta
-OVERLAPS=$SCRATCH/data/simulated_reads/human_diploid_30x_hifiasm.trio.0.16.1_hifi/hifiasm_r555_trial/output.overlaps.paf
-SEQKIT=$SCRATCH/tools/seqKit-v2.0.0/seqkit
-BEDTOOLS=$SCRATCH/tools/bedtools2/bedtools
-SEQTK=$SCRATCH/tools/seqtk-1.3/seqtk
-GENOMESIZE=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.size
+# Old script for obtaining fragmented reads from simulated data
+
+EXE=RAFT/raft
+READS=simulated_reads/human_diploid_30x_hifiasm.trio.0.16.1_hifi/reads.fasta
+OVERLAPS=data/simulated_reads/human_diploid_30x_hifiasm.trio.0.16.1_hifi/hifiasm_r555_trial/output.overlaps.paf
+SEQKIT=tools/seqKit-v2.0.0/seqkit
+BEDTOOLS=tools/bedtools2/bedtools
+SEQTK=tools/seqtk-1.3/seqtk
+GENOMESIZE=data/genomes/human/HG002.hifiasm.trio.0.16.1.size
 OUTPUTSEQ=output_reads.fasta
 PREFIX=chopper
 

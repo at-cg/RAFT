@@ -1,10 +1,12 @@
-HAP1=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.hap1.fa
-HAP2=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.hap2.fa
-BEDTOOLS=$SCRATCH/tools/bedtools2/bedtools
-READS=../../reads.fasta
-EXE=$SCRATCH/tools/minimap2-2.23_x64-linux/minimap2
-READIDS=../output.bp.r_utg.gfa.contained.headers
-GENOMESIZE=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.size
+# Compute length of unresolved gaps
+
+HAP1=data/genomes/human/HG002.hifiasm.trio.0.16.1.hap1.fa
+HAP2=data/genomes/human/HG002.hifiasm.trio.0.16.1.hap2.fa
+BEDTOOLS=tools/bedtools2/bedtools
+READS=data/input/reads.fasta
+EXE=tools/minimap2-2.23_x64-linux/minimap2
+READIDS=asm/output.bp.r_utg.gfa.contained.headers
+GENOMESIZE=data/genomes/human/HG002.hifiasm.trio.0.16.1.size
 GAPS=../../map_mm_noncontained/mm2.exactmapped.nocov.merged.subtracted.noends.100.bed
 SEQTK=$SCRATCH/tools/seqtk-1.3/seqtk
 

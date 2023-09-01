@@ -1,12 +1,14 @@
-EXE=$SCRATCH/tools/seqrequester/seqrequester
-HAP1=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.hap1.fa
-HAP2=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.hap2.fa
+# Simulating read sequencing data using seqrequester
+
+EXE=tools/seqrequester/seqrequester
+HAP1=data/genomes/human/HG002.hifiasm.trio.0.16.1.hap1.fa
+HAP2=data/genomes/human/HG002.hifiasm.trio.0.16.1.hap2.fa
 COVERAGE=15
-DIST=$SCRATCH/data/dist/HIFI/m64043_200904_190723.ccs.fastq.hist.txt
+DIST=data/dist/HIFI/m64043_200904_190723.ccs.fastq.hist.txt
 OUTPUTSEQ=reads.fasta
-GENOMESIZE=$SCRATCH/data/genomes/human/HG002.hifiasm.trio.0.16.1.size
-SEQKIT=$SCRATCH/tools/seqKit-v2.0.0/seqkit
-BEDTOOLS=$SCRATCH/tools/bedtools2/bedtools
+GENOMESIZE=data/genomes/human/HG002.hifiasm.trio.0.16.1.size
+SEQKIT=tools/seqKit-v2.0.0/seqkit
+BEDTOOLS=tools/bedtools2/bedtools
 
 SIZE=`grep -v ">" $HAP1 | wc | awk '{print $3-$1}'`
 $EXE simulate -truncate -genome $HAP1 -genomesize $SIZE -coverage $COVERAGE -distribution $DIST > $OUTPUTSEQ.hap1

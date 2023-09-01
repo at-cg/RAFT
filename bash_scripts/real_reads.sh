@@ -1,3 +1,5 @@
+# Convert fastq to fasta. Not necessary?
+
 wget -i README
 cat *.fastq.1 > reads.fastq
 rm *.fastq.1

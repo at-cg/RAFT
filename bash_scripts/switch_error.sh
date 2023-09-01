@@ -1,8 +1,10 @@
-EXE=$SCRATCH/tools/yak/yak
-READS=../../reads.fasta
-HAP1=../output.bp.hap1.p_ctg.fa
-HAP2=../output.bp.hap2.p_ctg.fa
-ASM=../output.bp.hap1hap2.p_ctg.fa
+# Computing switch error rate using yak trioeval
+
+EXE=tools/yak/yak
+READS=data/input/reads.fasta
+HAP1=asm/output.bp.hap1.p_ctg.fa
+HAP2=asm/output.bp.hap2.p_ctg.fa
+ASM=asm/output.bp.hap1hap2.p_ctg.fa # ASM file is the concatenation of HAP1 and HAP2
 
 grep -A 1 "h1tg" $READS > hap1.fasta
 grep -A 1 "h2tg" $READS > hap2.fasta

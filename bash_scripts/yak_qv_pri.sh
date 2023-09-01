@@ -1,6 +1,8 @@
-EXE=$SCRATCH/tools/yak/yak
-READS=../../reads.fasta
-ASM=../output.bp.p_ctg.fa
+# QV for primary assembly
+
+EXE=tools/yak/yak
+READS=data/input/reads.fasta
+ASM=asm/output.bp.p_ctg.fa
 PREFIX=output.yak
 
 rm -rf ${PREFIX}*

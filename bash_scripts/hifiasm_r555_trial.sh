@@ -1,3 +1,5 @@
+# Computing overlaps (cis + trans)
+
 EXE=$SCRATCH/tools/hifiasm/hifiasm
 READS=../reads.fasta
 PREFIX=output

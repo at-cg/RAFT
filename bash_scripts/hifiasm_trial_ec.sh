@@ -1,5 +1,7 @@
-EXE=$SCRATCH/tools/hifiasm/hifiasm
-READS=../output_reads.fasta
+# Obtaining error corrected reads from hifiasm
+
+EXE=tools/hifiasm/hifiasm
+READS=output_reads.fasta
 PREFIX=output
 
 rm -f ${PREFIX}*

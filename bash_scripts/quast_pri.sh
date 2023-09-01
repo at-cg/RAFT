@@ -1,5 +1,7 @@
-EXE=$SCRATCH/tools/quast/quast.py
-CONTIGS=../output.bp.p_ctg.fa
+# Using quast to get assembly length, NG50, etc for primary assembly
+
+EXE=tools/quast/quast.py
+CONTIGS=asm/output.bp.p_ctg.fa
 PREFIX=output
 
 rm -r ${PREFIX}

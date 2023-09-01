@@ -1,3 +1,5 @@
+# Identifying locations of uncovered regions
+
 READS=../reads.fasta
 OVERLAPS=../minimapAllToAllCigar/overlaps.paf
 SEQTK=$SCRATCH/tools/seqtk-1.3/seqtk

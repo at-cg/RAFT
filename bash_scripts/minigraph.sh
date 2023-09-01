@@ -1,6 +1,8 @@
-EXE=$SCRATCH/tools/minigraph/minigraph
-CONTIGS=../output.bp.p_ctg.fa
-REF=$SCRATCH/data/genomes/human/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+# Calculation primary NGA50
+
+EXE=tools/minigraph/minigraph
+CONTIGS=asm/output.bp.p_ctg.fa
+REF=data/genomes/human/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 PREFIX=output
 
 rm -r ${PREFIX}

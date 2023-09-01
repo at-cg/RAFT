@@ -1,5 +1,7 @@
-EXE=$SCRATCH/tools/hifiasm/hifiasm
-READS=../reads.fasta
+# Basic hifiasm run
+
+EXE=tools/hifiasm/hifiasm
+READS=data/input/reads.fasta
 PREFIX=output
 
 rm -f ${PREFIX}*
