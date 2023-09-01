@@ -5,6 +5,7 @@ Removal of contained reads has long been a weakness of overlap-layout-consensus 
 We recommend users to use [hifiasm](https://github.com/chhylp123/hifiasm) for the initial steps (read error correction, all-vs-all overlap computation) and also for the final step (assembly of fragmented reads). The assembly output format of hifiasm is described [here](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output). The RAFT-hifiasm workflow is designed to work with ONT Duplex, or a mixture of ONT Duplex and HiFI reads. ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step.
 
 ## <a name="started"></a>Try RAFT-hifiasm Workflow on Small Test Data
+The entire test workflow below will take about 3-4 minutes. Users can either run the commands one by one or copy the commands into an executable script.
 
 ```sh
 # Install hifiasm (requiring g++ and zlib)
@@ -20,12 +21,12 @@ mkdir -p assembly && cd assembly/
 # Get small test data
 wget https://github.com/chhylp123/hifiasm/releases/download/v0.7/chr11-2M.fa.gz
 
-# First run of hifiasm to obtain error corrected reads and homozygous coverage estimate
-../hifiasm/hifiasm -o errorcorrect -t4 -f0 --write-ec chr11-2M.fa.gz 2> errorcorrect.log
+# First run of hifiasm with 4 threads to obtain error corrected reads and coverage estimate
+../hifiasm/hifiasm -o errorcorrect -t4 --write-ec chr11-2M.fa.gz 2> errorcorrect.log
 COVERAGE=$(grep "homozygous" errorcorrect.log | tail -1 | awk '{print $6}')
 
 # Second run of hifiasm to obtain all-vs-all read overlaps as a paf file
-../hifiasm/hifiasm -o getOverlaps -t4 -f0 --dbg-ovec errorcorrect.ec.fa 2> getOverlaps.log
+../hifiasm/hifiasm -o getOverlaps -t4 --dbg-ovec errorcorrect.ec.fa 2> getOverlaps.log
 # Merge cis and trans overlaps
 cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 
@@ -34,7 +35,7 @@ cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 
 # Final hifiasm run to obtain assembly of fragmented reads
 # A single round of error correction (-r1) is enough here
-../hifiasm/hifiasm -o finalasm -t4 -f0 -r1 fragmented.reads.fasta 2> finalasm.log
+../hifiasm/hifiasm -o finalasm -t4 -r1 fragmented.reads.fasta 2> finalasm.log
 ```
 
 ## <a name="use"></a>Usage Details
