@@ -324,7 +324,7 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
 void break_long_reads(const char *readfilename, const char *paffilename, const char *repeatreadsfilename, struct algoParams &param)
 {
 
-    std::ofstream reads_final("output_reads.fasta");
+    std::ofstream reads_final(param.outputfilename + ".reads.fasta");
 
     int n_read;
     std::vector<Read *> reads;
