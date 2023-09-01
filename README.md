@@ -34,7 +34,7 @@ mv output.ec.fa ../data/error_free_reads.fa
 cd ../
 
 # Extract estimated coverage of dataset
-COVERAGE=$(grep "homozygous" ./hifiasm/firstRun.log | tail -1 | awk '{print $6}')
+COVERAGE=$(grep "homozygous" ./errorCorrect/output.log | tail -1 | awk '{print $6}')
 
 # Second run of hifiasm to obtain cis and trans overlaps as a paf file
 cd overlaps/
