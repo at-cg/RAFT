@@ -5,7 +5,7 @@ Assumed directory structure
 ./
 |____data/
 |____hifiasm/
-|____chopper/
+|____RAFT/
 |____errorCorrect/
 |____overlaps/
 |____assembly/
@@ -15,9 +15,9 @@ git clone https://github.com/chhylp123/hifiasm
 cd hifiasm && make
 cd ..
 
-# Install chopper 
-git clone https://github.com/username/chopper.git
-cd chopper && make
+# Install raft 
+git clone https://github.com/username/RAFT.git
+cd raft && make
 cd ..
 
 # Run on test data (use -f0 for small datasets)
@@ -43,9 +43,9 @@ cd overlaps/
 cat output.0.ovlp.paf output.1.ovlp.paf > ../data/overlaps.paf
 cd ../
 
-# Chopper fragments the error free reads using the overlap information
+# RAFT fragments the error free reads using the overlap information
 # Repeats longer than 5000 are preserved in the fragmented reads
-./chopper/chopper -e ${COVERAGE} -p 5000 -o output ./data/errorFree.ec.fa ./data/overlaps.paf
+./raft/raft -e ${COVERAGE} -p 5000 -o output ./data/errorFree.ec.fa ./data/overlaps.paf
 mv output_reads.fa ./data/fragmented_reads.fa
 
 # Final hifiasm run to obtain assembly from fragmented set of reads.
@@ -66,12 +66,12 @@ awk '/^S/{print ">"$2;print $3}' ./hifiasm/asm.bp.p_ctg.gfa > asm.p_ctg.fa
 
 ## <a name="intro"></a>Introduction
 
-RAFT is a pipeline designed to improve assembly continuity. It contains a command-line tool, `chopper`, designed to break long reads into smaller fragments based on specified parameters. RAFT takes input read files in FASTA/FASTQ format and alignment files in PAF format and performs read fragmentation according to the given parameters. The resulting fragments are outputted to `output_reads.fasta`.
+RAFT is a pipeline designed to improve assembly continuity. It contains a command-line tool, `raft`, designed to break long reads into smaller fragments based on specified parameters. RAFT takes input read files in FASTA/FASTQ format and alignment files in PAF format and performs read fragmentation according to the given parameters. The resulting fragments are outputted to `output_reads.fasta`.
 
 ## <a name="use"></a>Usage
 
 ```sh
-chopper [options] <input-reads.fa> <in.paf>
+raft [options] <input-reads.fa> <in.paf>
 ```
 
 ### <a name="opt"></a>Options
@@ -85,34 +85,36 @@ The following options can be used to customize the behavior of the program:
     -p INT: Set the minimum repeat length to be preserved [5000].
     -f INT: Set the flanking length for repeats [1000].
     -v INT: Set the overlap length between fragmented reads [500].
-    -o STR: Set the prefix of output files ["chopper"].
+    -o STR: Set the prefix of output files ["raft"].
 
 ## <a name="install"></a>Installation
 
 1. Clone the repository:
 ```sh
-git clone https://github.com/MehakBindra/chopper.git
+git clone https://github.com/MehakBindra/RAFT.git
 ```
 
 2. Compile the source code:
 ```sh
-cd chopper
+cd RAFT
 make
 ```
 
 ## <a name="examples"></a>Examples
 
-1. Run Chopper with estimated coverage 20:
+1. Run RAFT with estimated coverage 20:
 ```sh
-chopper -e 20 -m 1.3 -o output <input_reads> <input_overlaps>
+raft -e 20 -m 1.3 -o output <input_reads> <input_overlaps>
 ```
 
-2. Run Chopper with custom parameters:
+2. Run RAFT with custom parameters:
 ```sh
-chopper -e 20 -m 1.3 -p 7000 -f 500 -v 500 -l 15000 -o output <input_reads> <input_overlaps>
+raft -e 20 -m 1.3 -p 7000 -f 500 -v 500 -l 15000 -o output <input_reads> <input_overlaps>
 ```
 
 ## <a name="output"></a>Output Files
-Chopper outputs the following files:
-1. Coverage information for each read in `output_reads.coverage.txt`
-2. For simulated reads, it outputs the positions of long repeats in `output_reads.long_repeats.bed`.
+RAFT outputs the following files:
+1. Coverage information for each read in `output.coverage.txt`
+2. For simulated reads, it outputs 
+    1. the positions of long repeats in reference contigs in `output.long_repeats.bed`
+    2. the positions of long repeats in reads in `output.long_repeats.txt`

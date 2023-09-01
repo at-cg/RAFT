@@ -25,7 +25,7 @@ struct algoParams
         read_length = 20000;
         overlap_length = 500;
         flanking_length = 1000;
-        outputfilename = "chopper";
+        outputfilename = "raft";
         real_reads = 1;
         symmetric_overlaps = 0;
     }

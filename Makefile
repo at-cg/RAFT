@@ -1,4 +1,4 @@
-EXE= chopper
+EXE= raft
 LIBS= -lz
 CPPFLAGS= -std=c++14 -O3 
 
