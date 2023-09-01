@@ -1,6 +1,6 @@
-EXE=$HOME/Desktop/GitHub/chopper/chopper
-READS=$HOME/Desktop/GitHub/chopper/reads.fasta
-OVERLAPS=$HOME/Desktop/GitHub/chopper/overlaps.paf
+EXE=$HOME/Desktop/GitHub/RAFT/raft
+READS=$HOME/Desktop/GitHub/RAFT/reads.fasta
+OVERLAPS=$HOME/Desktop/GitHub/RAFT/overlaps.paf
 OUTPUTSEQ=output_reads.fasta
 PREFIX=output
 
