@@ -43,8 +43,6 @@ cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 raft [options] <input-reads.fa> <in.paf>
 ```
 
-### <a name="opt"></a>Options
-
 The following options can be used to customize the behavior of the program:
 
     -r INT: Set the resolution of local coverage [50].
