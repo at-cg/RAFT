@@ -1,74 +1,43 @@
-## <a name="started"></a>Getting Started
-
-```sh
-Assumed directory structure
-./
-|____data/
-|____hifiasm/
-|____RAFT/
-|____errorCorrect/
-|____overlaps/
-|____assembly/
-
-# Install hifiasm (requiring g++ and zlib)
-git clone https://github.com/chhylp123/hifiasm
-cd hifiasm && make
-cd ..
-
-# Install raft 
-git clone https://github.com/username/RAFT.git
-cd raft && make
-cd ..
-
-# Run on test data (use -f0 for small datasets)
-mkdir -p data && cd data
-wget https://github.com/chhylp123/hifiasm/releases/download/v0.7/chr11-2M.fa.gz
-cd ..
-
-# First run of hifiasm to obtain error corrected reads and homozygous coverage estimate
-cd errorCorrect/
-../hifiasm/hifiasm -o output -t4 -f0 --write-ec ./data/chr11-2M.fa.gz 2> output.log
-# Extract primary contigs in FASTA format
-awk '/^S/{print ">"$2;print $3}' output.bp.p_ctg.gfa > output.p_ctg.fa
-mv output.ec.fa ../data/error_free_reads.fa
-cd ../
-
-# Extract estimated coverage of dataset
-COVERAGE=$(grep "homozygous" ./errorCorrect/output.log | tail -1 | awk '{print $6}')
-
-# Second run of hifiasm to obtain cis and trans overlaps as a paf file
-cd overlaps/
-../hifiasm/hifiasm -o output -t4 -f0 --dbg-ovec ../data/error_free_reads.fa 2> output.log
-# Merge cis and trans overlaps into a single PAF file
-cat output.0.ovlp.paf output.1.ovlp.paf > ../data/overlaps.paf
-cd ../
-
-# RAFT fragments the error free reads using the overlap information
-# Repeats longer than 5000 are preserved in the fragmented reads
-./raft/raft -e ${COVERAGE} -p 5000 -o output ./data/errorFree.ec.fa ./data/overlaps.paf
-mv output_reads.fa ./data/fragmented_reads.fa
-
-# Final hifiasm run to obtain assembly from fragmented set of reads.
-cd assembly/
-../hifiasm/hifiasm -o asm -t4 -f0 -r1 ../data/fragmented_reads.fa 2> asm.log
-# Extract primary contigs in FASTA format
-awk '/^S/{print ">"$2;print $3}' ./hifiasm/asm.bp.p_ctg.gfa > asm.p_ctg.fa
-```
-
-## Table of Contents
-- [Getting Started](#started)
-- [Introduction](#intro)
-- [Usage](#use)
-    - [Options](#opt)
-- [Installation](#install)
-- [Examples](#examples)
-- [Output Files](#output)
-
 ## <a name="intro"></a>Introduction
 
-RAFT is a pipeline designed to improve assembly continuity. It contains a command-line tool, `raft`, designed to break long reads into smaller fragments based on specified parameters. RAFT takes input read files in FASTA/FASTQ format and alignment files in PAF format and performs read fragmentation according to the given parameters. The resulting fragments are outputted to `output_reads.fasta`.
+Removal of contained reads has long been a weakness of overlap-layout-consensus (OLC) assemblers. RAFT is an algorithm to improve assembly continuity by rescuing contained reads. RAFT breaks long reads into smaller fragments by following an algorithm described in our [preprint](#papers). The read fragmentation allows an OLC assembler to retain contained reads during string graph construction. The inputs to RAFT is an error-corrected read file in FASTA/FASTQ format and an all-vs-all alignment file in PAF format. It performs read fragmentation and outputs the fragmented reads in FASTA format. 
 
-## <a name="use"></a>Usage
+We recommend users to use [hifiasm](https://github.com/chhylp123/hifiasm) for the initial steps (read error correction, all-vs-all overlap computation) and also for the final step (assembly of fragmented reads). The assembly output format of hifiasm is described [here](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output). The RAFT-hifiasm workflow is designed to work with ONT Duplex, or a mixture of ONT Duplex and HiFI reads. ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step.
+
+## <a name="started"></a>Try RAFT-hifiasm Workflow on Small Test Data
+
+```sh
+# Install hifiasm (requiring g++ and zlib)
+git clone https://github.com/chhylp123/hifiasm
+cd hifiasm && make -j4 && cd ..
+
+# Install RAFT 
+git clone https://github.com/at-cg/RAFT.git
+cd RAFT && make && cd ..
+
+mkdir -p assembly && cd assembly/
+
+# Get small test data
+wget https://github.com/chhylp123/hifiasm/releases/download/v0.7/chr11-2M.fa.gz
+
+# First run of hifiasm to obtain error corrected reads and homozygous coverage estimate
+../hifiasm/hifiasm -o errorcorrect -t4 -f0 --write-ec chr11-2M.fa.gz 2> errorcorrect.log
+COVERAGE=$(grep "homozygous" errorcorrect.log | tail -1 | awk '{print $6}')
+
+# Second run of hifiasm to obtain all-vs-all read overlaps as a paf file
+../hifiasm/hifiasm -o getOverlaps -t4 -f0 --dbg-ovec errorcorrect.ec.fa 2> getOverlaps.log
+# Merge cis and trans overlaps
+cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
+
+# RAFT fragments the error corrected reads
+../RAFT/raft -e ${COVERAGE} -o fragmented errorcorrect.ec.fa overlaps.paf
+
+# Final hifiasm run to obtain assembly of fragmented reads
+# A single round of error correction (-r1) is enough here
+../hifiasm/hifiasm -o asm -t4 -f0 -r1 fragmented_reads.fa 2> asm.log
+```
+
+## <a name="use"></a>Usage Details
 
 ```sh
 raft [options] <input-reads.fa> <in.paf>
@@ -115,6 +84,9 @@ raft -e 20 -m 1.3 -p 7000 -f 500 -v 500 -l 15000 -o output <input_reads> <input_
 ## <a name="output"></a>Output Files
 RAFT outputs the following files:
 1. Coverage information for each read in `output.coverage.txt`
-2. For simulated reads, it outputs 
+2. For input reads simulated using seqrequester, it outputs additional information for debugging 
     1. the positions of long repeats in reference contigs in `output.long_repeats.bed`
     2. the positions of long repeats in reads in `output.long_repeats.txt`
+
+## <a name="papers"></a>Preprint
+Coming soon
