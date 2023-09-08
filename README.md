@@ -83,10 +83,10 @@ raft -e 20 -m 1.3 -p 7000 -f 500 -v 500 -l 15000 -o output <input_reads> <input_
 
 ## <a name="output"></a>Output Files
 RAFT outputs the following files:
-1. Coverage information for each read in `output.coverage.txt`
+1. Coverage information for each read in \`prefix\`.coverage.txt
 2. For input reads simulated using seqrequester, it outputs additional information for debugging 
-    1. the positions of long repeats in reference contigs in `output.long_repeats.bed`
-    2. the positions of long repeats in reads in `output.long_repeats.txt`
+    1. the positions of long repeats in reference contigs in \`prefix\`.long_repeats.bed
+    2. the positions of long repeats in reads in \`prefix\`.long_repeats.txt
 
 ## <a name="papers"></a>Preprint
 Coming soon
