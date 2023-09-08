@@ -36,6 +36,7 @@ cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 # Final hifiasm run to obtain assembly of fragmented reads
 # A single round of error correction (-r1) is enough here
 ../hifiasm/hifiasm -o finalasm -t4 -r1 fragmented.reads.fasta 2> finalasm.log
+ls finalasm*p_ctg.gfa
 ```
 
 ## <a name="use"></a>Usage Details
