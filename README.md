@@ -47,14 +47,14 @@ raft [options] <input-reads.fa> <in.paf>
 
 The following options can be used to customize the behavior of the program:
 
-    -r INT: Set the resolution of local coverage [50].
-    -e INT: Set the estimated coverage [0].
-    -m NUM: Set the coverage multiplier for high coverage [1.5].
-    -l INT: Set the desired read length [20000].
-    -p INT: Set the minimum repeat length to be preserved [5000].
-    -f INT: Set the flanking length for repeats [1000].
-    -v INT: Set the overlap length between fragmented reads [500].
-    -o STR: Set the prefix of output files ["raft"].
+    -r INT: Set the resolution of local coverage [50]
+    -e INT: Set the estimated coverage
+    -m NUM: Set the coverage multiplier for high coverage [1.5]
+    -l INT: Set the desired read length [20000]
+    -p INT: Set the minimum repeat length to be preserved [5000]
+    -f INT: Set the flanking length for repeats [1000]
+    -v INT: Set the overlap length between fragmented reads [500]
+    -o STR: Set the prefix of output files ["raft"]
 
 ## <a name="install"></a>Installation
 

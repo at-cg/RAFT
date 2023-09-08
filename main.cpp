@@ -8,7 +8,7 @@ void printHelp(const algoParams &params)
 {
     std::cout << "Usage: raft [options] <input-reads.fa> <in.paf>\n";
     std::cout << "  -r NUM     resolution of coverage " << params.reso << "\n";
-    std::cout << "  -e NUM     estimated coverage " << params.est_cov << "\n";
+    std::cout << "  -e NUM     estimated coverage " << "\n";
     std::cout << "  -m NUM     coverage multiplier " << params.cov_mul << "\n";
     std::cout << "  -l NUM     read_length " << params.read_length << "\n";
     std::cout << "  -v NUM     overlap_length " << params.overlap_length << "\n";
@@ -61,6 +61,12 @@ int main(int argc, char *argv[])
     // print usage
     if (argc < optind + 2)
         printHelp(params);
+
+    if (params.est_cov <= 0) {
+      std::cout << "ERROR, main(), estimated coverage must be set properly\n";
+      printHelp(params);
+    }
+
 
     params.printParams();
 
