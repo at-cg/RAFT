@@ -60,7 +60,7 @@ The following options can be used to customize the behavior of the program:
 
 1. Clone the repository:
 ```sh
-git clone https://github.com/MehakBindra/RAFT.git
+git clone https://github.com/at-cg/RAFT.git
 ```
 
 2. Compile the source code:
