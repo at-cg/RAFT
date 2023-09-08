@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
       printHelp(params);
     }
 
-
     params.printParams();
 
     auto tStart = std::chrono::system_clock::now();

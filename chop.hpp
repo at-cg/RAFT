@@ -320,11 +320,30 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
     }
 }
 
+bool file_is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
+}
 
 void break_long_reads(const char *readfilename, const char *paffilename, const char *repeatreadsfilename, struct algoParams &param)
 {
-
     std::ofstream reads_final(param.outputfilename + ".reads.fasta");
+
+    // check if input files are valid
+    {
+      std::ifstream file(readfilename);
+      if (!file || file_is_empty(file)) {
+        std::cout << "ERROR, break_long_reads(), "<< readfilename << " input file either does not exist or is empty\n";
+        exit(1);
+      }
+    }
+    {
+      std::ifstream file(paffilename);
+      if (!file || file_is_empty(file)) {
+        std::cout << "ERROR, break_long_reads(), "<< paffilename << " input file either does not exist or is empty\n";
+        exit(1);
+      }
+    }
 
     int n_read;
     std::vector<Read *> reads;
