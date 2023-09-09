@@ -48,7 +48,7 @@ Users are recommended to increase the thread count depending on the number of th
 raft [options] <input-reads.fa> <in.paf>
 ```
 
-The following options can be used to customize the behavior of the program:
+The following options can be used to customize the behavior of the program. The default values are set if there is no custom requirement.
 
     -r INT: Set the resolution of local coverage [50]
     -e INT: Set the estimated coverage
