@@ -10,13 +10,13 @@ _The RAFT-hifiasm workflow is recommended for long accurate reads with non-unifo
 The entire test workflow below will take about 3-4 minutes. Users can either run the commands one by one or copy the commands into an executable script.
 
 ```sh
-# Install hifiasm (requiring g++ and zlib)
-git clone https://github.com/chhylp123/hifiasm
-cd hifiasm && make -j4 && cd ..
-
 # Install RAFT 
 git clone https://github.com/at-cg/RAFT.git
 cd RAFT && make && cd ..
+
+# Install hifiasm (requiring g++ and zlib)
+git clone https://github.com/chhylp123/hifiasm
+cd hifiasm && make -j4 && cd ..
 
 mkdir -p assembly && cd assembly/
 
