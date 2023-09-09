@@ -40,7 +40,7 @@ cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 ../hifiasm/hifiasm -o finalasm -t4 -r1 fragmented.reads.fasta 2> finalasm.log
 ls finalasm*p_ctg.gfa
 ```
-For large inputs, users are recommended to increase the thread count depending on the number of the cores available for use. RAFT-hifiasm workflow takes about 9 hours and ~100 GB RAM using 128 threads on a [Perlmutter CPU-based node](https://docs.nersc.gov/systems/perlmutter/architecture/) to process 32x ONT Duplex human data.
+For large inputs, users are recommended to increase the thread count depending on the number of the cores available for use. RAFT-hifiasm workflow takes about 9 hours and ~100 GB RAM using 128 threads on a multicore [Perlmutter CPU-based node](https://docs.nersc.gov/systems/perlmutter/architecture/) to process 32x ONT Duplex human data.
 
 ## <a name="use"></a>Usage Details
 
