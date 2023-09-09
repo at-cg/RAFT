@@ -1,8 +1,10 @@
 ## <a name="intro"></a>Introduction
 
-Removal of contained reads has long been a weakness of overlap-layout-consensus (OLC) assemblers. RAFT is an algorithm designed to improve assembly quality by rescuing contained reads. RAFT breaks long reads into smaller fragments by following an algorithm described in our [preprint](#papers). The read fragmentation allows an OLC assembler to retain contained reads during string graph construction. The inputs to RAFT include an error-corrected read file in FASTA/FASTQ format and an all-vs-all alignment file in PAF format. It performs read fragmentation and outputs the fragmented reads in FASTA format. 
+Removal of contained reads has long been a weakness of overlap-layout-consensus (OLC) assemblers. RAFT (**R**epeat **A**ware **F**ragmentation **T**ool) is an algorithm designed to improve assembly quality by rescuing contained reads. RAFT breaks long reads into smaller sub-reads by following an algorithm described in our [preprint](#papers). The read fragmentation allows an OLC assembler to retain contained reads during string graph construction. The inputs to RAFT include an error-corrected read file in FASTA/FASTQ format and an all-vs-all alignment file in PAF format. It performs read fragmentation and outputs the fragmented reads in FASTA format. 
 
-We recommend users to use [hifiasm](https://github.com/chhylp123/hifiasm) for the initial steps (read error correction, all-vs-all overlap computation) and also for the final step (assembly of fragmented reads). The assembly output format of hifiasm is described [here](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output). The RAFT-hifiasm workflow is designed to work with ONT Duplex, or a mixture of ONT Duplex and HiFI reads. ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step.
+We recommend users to use [hifiasm](https://github.com/chhylp123/hifiasm) for the initial steps (read error correction, all-vs-all overlap computation) and also for the final step (assembly of fragmented reads). The assembly output format of hifiasm is described [here](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output). 
+
+_The RAFT-hifiasm workflow is designed to work with ONT Duplex, or a mixture of ONT Duplex and HiFi reads. ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step._
 
 ## <a name="started"></a>Try RAFT-hifiasm Workflow on Small Test Data
 The entire test workflow below will take about 3-4 minutes. Users can either run the commands one by one or copy the commands into an executable script.
@@ -38,6 +40,7 @@ cat getOverlaps.0.ovlp.paf getOverlaps.1.ovlp.paf > overlaps.paf
 ../hifiasm/hifiasm -o finalasm -t4 -r1 fragmented.reads.fasta 2> finalasm.log
 ls finalasm*p_ctg.gfa
 ```
+Users are recommended to increase the thread count depending on the number of the cores available for use. At our end, RAFT-hifiasm workflow takes about 9 hours and ~100 GB RAM on a [Perlmutter CPU-based node](https://docs.nersc.gov/systems/perlmutter/architecture/) to process 32x ONT Duplex human data.
 
 ## <a name="use"></a>Usage Details
 
