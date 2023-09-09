@@ -4,7 +4,7 @@ Removal of contained reads has long been a weakness of overlap-layout-consensus 
 
 We recommend users to use [hifiasm](https://github.com/chhylp123/hifiasm) for the initial steps (read error correction, all-vs-all overlap computation) and also for the final step (assembly of fragmented reads). The assembly output format of hifiasm is described [here](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output). 
 
-_The RAFT-hifiasm workflow is designed to work with ONT Duplex, or a mixture of ONT Duplex and HiFi reads. ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step._
+_The RAFT-hifiasm workflow is recommended for long accurate reads with non-uniform length distribution (e.g., ONT Duplex, or a mixture of ONT Duplex and HiFi reads). ONT UL reads can optionally be [integrated](https://github.com/chhylp123/hifiasm#ul) during the final assembly step._
 
 ## <a name="started"></a>Try RAFT-hifiasm Workflow on Small Test Data
 The entire test workflow below will take about 3-4 minutes. Users can either run the commands one by one or copy the commands into an executable script.
