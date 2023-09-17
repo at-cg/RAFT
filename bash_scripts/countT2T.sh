@@ -10,7 +10,7 @@ REF=/global/cfs/cdirs/m4320/references/human/T2T/chm13.draft_v2.0.fasta
 HAP1=/path/to/asm.bp.hap1.p_ctg.fa
 HAP2=/path/to/asm.bp.hap2.p_ctg.fa
 HAP12=hap1hap2.p_ctg.fa
-WORKFLOW=/path/to/HPRC_assessAsemblyCompletness.wdl
+WORKFLOW=HPRC_assessAsemblyCompletness.wdl  #in RAFT/bash_scripts/
 EXE=/path/to/cromwell-85.jar  #.jar file available at https://github.com/broadinstitute/cromwell/releases/tag/85
 THREADS=32
 
