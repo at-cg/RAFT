@@ -1,32 +1,32 @@
 #!/bin/bash
+#SBATCH --qos=debug
+#SBATCH --nodes=1
+#SBATCH --time=00:30:00
+#SBATCH --constraint=cpu
+#SBATCH --output=BATCH_OUTPUT
+#SBATCH --error=BATCH_OUTPUT
 
-# https://anaconda.org/bioconda/tidk
-TIDK=/path/to/tidk
-SAMTOOLS=/path/to/samtools
-COUNTER=~/bash_scripts/T2T-count.pl
+REF=/global/cfs/cdirs/m4320/references/human/T2T/chm13.draft_v2.0.fasta
+HAP1=/path/to/asm.bp.hap1.p_ctg.fa
+HAP2=/path/to/asm.bp.hap2.p_ctg.fa
+HAP12=hap1hap2.p_ctg.fa
+WORKFLOW=/path/to/HPRC_assessAsemblyCompletness.wdl_
+EXE=/path/to/cromwell-85.jar  #https://github.com/broadinstitute/cromwell/releases/tag/85
+THREADS=32
 
-SEQ=/path/to/concatenated/assembly/contigs/output.bp.hap1hap2.p_ctg.fa
+#load dependencies
+#executables "seqtk", "NCRF", "bioawk", "mashamp" should be in path
+#https://anaconda.org/bioconda/seqtk
+#https://anaconda.org/bioconda/ncrf
+#https://anaconda.org/bioconda/mashmap
+#https://anaconda.org/bioconda/bioawk
 
-PREFIX=output
-TELOMERE=TTAGGG
+#create input in JSON format
+JSON_FMT='{"assessAssemblyCompletness.reference":"%s","assessAssemblyCompletness.assembly":"%s","assessAssemblyCompletness.threadCount":"%s"}\n'
+printf "$JSON_FMT" "$REF" "$HAP12" "$THREADS" > input.json
 
-$SAMTOOLS --version
-/usr/bin/time $SAMTOOLS faidx $SEQ
 
-if [ ! -d t2tCounts/ ]; then
-	mkdir t2tCounts
-fi
+cat $HAP1 $HAP2 > $HAP12
+java -jar $EXE run $WORKFLOW --inputs input.json
 
-#input 10000 for window parameter is default
-$TIDK --version
-$TIDK search --dir ./t2tCounts/ --extension tsv --output $PREFIX --string $TELOMERE --window 10000 $SEQ
-sed 's/\t/,/g' ./t2tCounts/${PREFIX}_telomeric_repeat_windows.tsv > ./t2tCounts/${PREFIX}_telomeric_repeat_windows.csv
-
-#100000 is the length of prefix and suffix of contig where $TELOMERE is searched; 100 is the lower bound cutoff;
-perl $COUNTER ./t2tCounts/${PREFIX}_telomeric_repeat_windows.csv ${SEQ}.fai 100000 100 > ./t2tCounts/t2tSearch.out
-
-#list out all contigs which satisfy telomere count criterion
-awk '$3>100 && $4>100' ./t2tCounts/t2tSearch.out > ./t2tCounts/search.list
-
-# move output of perlscript to t2tCounts folder
-mv Plot_T2T.txt ./t2tCounts/Plot_T2T.txt
+#see end of output log to know the path to output file ${HAP12}.T2T.contigs.txt
