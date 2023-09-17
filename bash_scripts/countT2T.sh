@@ -29,4 +29,5 @@ printf "$JSON_FMT" "$REF" "$HAP12" "$THREADS" > input.json
 cat $HAP1 $HAP2 > $HAP12
 java -jar $EXE run $WORKFLOW --inputs input.json
 
-#see end of output log to know the path to output file ${HAP12}.T2T.contigs.txt
+#T2T contigs are saved in a output file
+#To find the location of the output file, run:   grep -A2 "outputs" BATCH_OUTPUT
