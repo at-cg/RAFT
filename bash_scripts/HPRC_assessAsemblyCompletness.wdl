@@ -109,9 +109,6 @@ task formatAssembly {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        preemptible : preemptible
-        docker: "quay.io/biocontainers/seqtk:1.3--hed695b0_2"
     }
 }
 
@@ -148,9 +145,6 @@ task generateAssemblyEdges {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        preemptible : preemptible
-        docker: "quay.io/biocontainers/gawk:5.1.0"
     }
 }
 
@@ -192,9 +186,6 @@ task runBioawk {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        preemptible : preemptible
-        docker: "quay.io/biocontainers/bioawk:1.0--hed695b0_5"
     }
 }
 
@@ -223,8 +214,6 @@ task combineIntoFasta {
     }
 
     runtime {
-        preemptible : preemptible
-        docker: "ubuntu:18.04"
     }
 
 }
@@ -255,9 +244,6 @@ task runNCRF {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        preemptible : preemptible
-        docker: "quay.io/biocontainers/ncrf:1.01.02--hec16e2b_3"
     }
 
 }
@@ -288,10 +274,6 @@ task runMashMap {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        cpu: threadCount
-        preemptible : preemptible
-        docker: "quay.io/biocontainers/mashmap:2.0--h543ed2d_4"
     }
 
 }
@@ -341,9 +323,6 @@ task assessCompletness {
     }
 
     runtime {
-        memory: memSizeGB + " GB"
-        preemptible : preemptible
-        docker: "ubuntu:18.04"
     }
 }
 
