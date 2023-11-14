@@ -92,4 +92,4 @@ RAFT outputs the following files:
     2. the positions of long repeats in reads in \`prefix\`.long_repeats.txt
 
 ## <a name="papers"></a>Preprint
-Coming soon
+Sudhanva Shyam Kamath, Mehak Bindra, Debnath Pal, Chirag Jain. [Telomere-to-telomere assembly by preserving contained reads](https://doi.org/10.1101/2023.11.07.565066). Biorxiv (November 2023).
