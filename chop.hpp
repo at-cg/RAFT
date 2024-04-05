@@ -258,7 +258,8 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
             }
             else
             {
-                reads_final << ">read=" << read_num << "," << read_name << "\n";
+                reads_final << ">read=" << read_num << "," << read_name << ",pos_on_original_read="
+                            << 0 << "-" << read_length << "\n";
             }
 
             reads_final << read_seq << "\n";
@@ -310,7 +311,9 @@ void break_reads(const algoParams &param, int n_read, std::vector<Read *> &reads
                 }
                 else
                 {
-                    reads_final << ">read=" << read_num << "," << read_name << "\n";
+                    reads_final << ">read=" << read_num << "," << read_name << ",pos_on_original_read="
+                                << final_stars[pos] - overlap_length << "-"
+                                << last_pos << "\n";
                 }
                 reads_final << read_seq.substr(final_stars[pos] - overlap_length, last_pos - final_stars[pos] + overlap_length) << "\n";
                 read_num++;
