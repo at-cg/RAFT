@@ -23,9 +23,14 @@ mkdir -p assembly && cd assembly/
 # Get small test data
 wget https://github.com/chhylp123/hifiasm/releases/download/v0.7/chr11-2M.fa.gz
 
-# First run of hifiasm with 4 threads to obtain error corrected reads and coverage estimate
+# Estimate coverage -- extract the total number of bases (sum_len)
+# and divide by estimated length of genome (2M)
+seqkit stats chr11-2m.fa.gz
+# coverage = 84,042,542/2,000,000
+COVERAGE=42
+
+# First run of hifiasm with 4 threads to obtain error corrected reads
 ../hifiasm/hifiasm -o errorcorrect -t4 --write-ec chr11-2M.fa.gz 2> errorcorrect.log
-COVERAGE=$(grep "homozygous" errorcorrect.log | tail -1 | awk '{print $6}')
 
 # Second run of hifiasm to obtain all-vs-all read overlaps as a paf file
 ../hifiasm/hifiasm -o getOverlaps -t4 --dbg-ovec errorcorrect.ec.fa 2> getOverlaps.log
